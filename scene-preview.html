@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scene preview (dev only)</title>
+    <style>
+      body { padding: 8px; }
+      .wrap { max-width: 1060px; margin: 0 auto; }
+      .bar { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+      .bar button { min-height: 44px; padding: 4px 12px; border: 0; border-radius: 12px; background: #fff5e5; font-weight: 700; }
+      .bar button[aria-pressed='true'] { background: #ffc65c; }
+      #log { color: #fff5e5; font-size: 14px; min-height: 1.4em; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div id="scene"></div>
+      <div class="bar" id="bar"></div>
+      <p id="log">Dev harness for src/ui/scene.js. Not part of the build.</p>
+    </div>
+    <script type="module">
+      import '/src/styles/tokens.css';
+      import '/src/styles/scene.css';
+      import { mountScene, updateScene } from '/src/ui/scene.js';
+
+      const base = () => ({
+        mode: 'story',
+        step: 'greenhouse',
+        phase: 'choose',
+        loadout: { battery: false, kit: false, mealPack: false },
+        res: { power: 4, water: 4, meals: 2, readyMeals: 0, warmth: 1, oxygen: 2, reserve: 1 },
+        flags: { lights: false, crop: 0, valve: false, shelter: null, generator: false, recycler: false, clip: false, cable: false, sent: false, sunrise: false },
+        history: [],
+        last: null,
+        checkpoint: null,
+      });
+      const make = (patch = {}) => {
+        const s = base();
+        return { ...s, ...patch, res: { ...s.res, ...patch.res }, flags: { ...s.flags, ...patch.flags } };
+      };
+      const play = (extra = {}) => ({ screen: 'play', open: false, selected: null, bagStage: 0, seq: null, ...extra });
+      const warm = { flags: { lights: true, crop: 1, valve: true }, res: { power: 2, warmth: 2 } };
+      const sheltered = { flags: { ...warm.flags, shelter: 'early' }, res: { power: 1, warmth: 2, meals: 1 } };
+      const late = { flags: { ...sheltered.flags, recycler: true, sunrise: true }, res: { power: 1, warmth: 2, water: 1, reserve: 0, meals: 0 } };
+
+      const presets = {
+        'Calm (start)': [null, { screen: 'start', open: false, selected: null, bagStage: 0, seq: null }],
+        'Greenhouse': [make(), play()],
+        'Greenhouse open': [make(), play({ open: true })],
+        'Lights on': [make({ phase: 'result', flags: { lights: true, crop: 1 }, res: { power: 2 } }), play({ open: true })],
+        'Valve': [make({ step: 'valve', flags: { lights: true, crop: 1 }, res: { power: 2 } }), play()],
+        'Cold cabin': [make({ step: 'valve', phase: 'recovery', res: { power: 2, warmth: 0 } }), play({ open: true })],
+        'Shelter': [make({ step: 'shelter', ...warm }), play()],
+        'Bag 0': [make({ step: 'shelter', phase: 'result', ...sheltered }), play({ open: true, bagStage: 0 })],
+        'Bag 1': [make({ step: 'shelter', phase: 'result', ...sheltered }), play({ open: true, bagStage: 1 })],
+        'Bag 2': [make({ step: 'shelter', phase: 'result', ...sheltered }), play({ open: true, bagStage: 2 })],
+        'Oxygen': [make({ step: 'oxygen', ...sheltered }), play()],
+        'Generator on': [make({ step: 'oxygen', phase: 'result', flags: { ...sheltered.flags, generator: true }, res: { power: 4, warmth: 2 } }), play({ open: true })],
+        'Reserve used': [make({ step: 'oxygen', phase: 'result', ...sheltered, res: { ...sheltered.res, reserve: 0 } }), play({ open: true })],
+        'Recycler broken': [make({ step: 'repair', ...sheltered, res: { ...sheltered.res, water: 3, reserve: 0 } }), play()],
+        'Repair turn 1': [
+          make({ step: 'repair', phase: 'result', flags: { ...sheltered.flags, recycler: true }, res: { ...sheltered.res, water: 1, reserve: 0 }, last: { sequence: [{ water: 2 }, { water: 1 }] } }),
+          play({ open: true, seq: 0 }),
+        ],
+        'Repaired': [make({ step: 'repair', phase: 'result', flags: { ...sheltered.flags, recycler: true }, res: { ...sheltered.res, water: 1, reserve: 0 } }), play({ open: true })],
+        'Printer': [make({ step: 'plastic', flags: { ...sheltered.flags, recycler: true }, res: { ...sheltered.res, water: 1, reserve: 0 } }), play()],
+        'Sunrise': [make({ step: 'signal', ...late }), play()],
+        'Antenna + clip': [make({ step: 'antenna', ...late, flags: { ...late.flags, clip: true }, res: { ...late.res, power: 0 } }), play()],
+        'Cable secured': [make({ step: 'antenna', ...late, flags: { ...late.flags, cable: true } }), play({ open: true })],
+        'Signal sent': [make({ step: 'done', ...late, flags: { ...late.flags, cable: true, sent: true } }), { screen: 'end', open: false, selected: null, bagStage: 0, seq: null }],
+        'Battery 7': [make({ res: { power: 7, water: 5 } }), play({ open: true })],
+        'Battery 0': [make({ res: { power: 0, water: 0 } }), play({ open: true })],
+      };
+
+      const log = document.querySelector('#log');
+      mountScene(document.querySelector('#scene'), {
+        onDevice: (id) => {
+          log.textContent = `onDevice("${id}") at ${new Date().toLocaleTimeString()}`;
+        },
+      });
+
+      const bar = document.querySelector('#bar');
+      const show = (name) => {
+        updateScene(...presets[name]);
+        for (const b of bar.children) b.setAttribute('aria-pressed', String(b.textContent === name));
+      };
+      for (const name of Object.keys(presets)) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = name;
+        b.addEventListener('click', () => show(name));
+        bar.append(b);
+      }
+      window.__show = show;
+      show(new URLSearchParams(location.search).get('p') ?? 'Calm (start)');
+    </script>
+  </body>
+</html>

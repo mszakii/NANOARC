@@ -1,0 +1,1508 @@
+/* Qamar Square moon-base scene. Owner: Lane B.
+   Reads tokens.css. Defines only scene-local --sc-* properties.
+   Every visible state is driven by data-* attributes that scene.js writes on .scene. */
+
+.scene {
+  --sc-shell: #dde4f0;
+  --sc-shell-2: #b7c2d6;
+  --sc-metal: #96a3bd;
+  --sc-moon: #a7afc0;
+  --sc-moon-2: #858ea3;
+  --sc-wood: #c98d55;
+  --sc-off: #59647e;
+  --sc-dawn-0: #3d4f93;
+  --sc-dawn-1: #e9967a;
+  --sc-room: var(--room);
+  --sc-floor: var(--room-2);
+  --sc-glow: 0.55;
+  --sc-crew-x: 62%;
+  --sc-crew-y: 50.2%;
+  --sc-slide: calc(var(--slow) * 1.5);
+  --sc-dawn-time: calc(var(--slow) * 4);
+
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius);
+  background: var(--space);
+  user-select: none;
+  -webkit-user-select: none;
+
+  .scene__stage {
+    position: absolute;
+    inset: 0;
+  }
+
+  .scene__art {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font);
+  }
+
+  /* ---------- Shared drawing styles ---------- */
+
+  .o {
+    stroke: var(--ink);
+    stroke-width: 5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .o-thin {
+    stroke: var(--ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .dev {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition: filter var(--fast);
+
+    &.is-active {
+      filter: drop-shadow(0 0 3px var(--sun)) drop-shadow(0 0 12px var(--sun));
+    }
+  }
+
+  &[data-open='0'] .dev.is-active {
+    animation: sc-wiggle 1.1s ease-in-out infinite;
+  }
+
+  .tick {
+    fill: none;
+    stroke: var(--card);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity var(--fast);
+  }
+
+  .metal {
+    fill: var(--sc-metal);
+  }
+
+  .wood {
+    fill: var(--sc-wood);
+  }
+
+  .hub {
+    fill: var(--ink);
+  }
+
+  .mast {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 9;
+    stroke-linecap: round;
+
+    &.mast--thin {
+      stroke-width: 5;
+    }
+  }
+
+  .feed {
+    fill: var(--coral);
+  }
+
+  .lbl {
+    fill: var(--ink);
+    font-size: 26px;
+    font-weight: 800;
+  }
+
+  /* ---------- Sky ---------- */
+
+  .st-space {
+    stop-color: var(--space);
+  }
+
+  .st-space-2 {
+    stop-color: var(--space-2);
+  }
+
+  .st-dawn-0 {
+    stop-color: var(--sc-dawn-0);
+  }
+
+  .st-dawn-1 {
+    stop-color: var(--sc-dawn-1);
+  }
+
+  .st-dawn-2 {
+    stop-color: var(--sun);
+  }
+
+  .st-glow {
+    stop-color: var(--sun);
+  }
+
+  .sky-dawn {
+    opacity: 0;
+    transition: opacity var(--sc-dawn-time) ease-in-out;
+  }
+
+  .stars {
+    transition: opacity var(--sc-dawn-time);
+  }
+
+  .star {
+    fill: var(--room);
+
+    &.star--twinkle {
+      animation: sc-twinkle 3.2s ease-in-out infinite;
+    }
+  }
+
+  .sun {
+    opacity: 0;
+    translate: 0 140px;
+    transition:
+      opacity var(--sc-dawn-time),
+      translate var(--sc-dawn-time) ease-out;
+  }
+
+  .sun-disc {
+    fill: var(--sun);
+  }
+
+  .sun-rays {
+    fill: none;
+    stroke: var(--sun);
+    stroke-width: 7;
+    stroke-linecap: round;
+    transform-origin: 1135px 95px;
+  }
+
+  .earth-sea {
+    fill: var(--sky-blue);
+  }
+
+  .earth-land {
+    fill: var(--leaf);
+  }
+
+  .earth-cloud {
+    fill: none;
+    stroke: var(--card);
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+
+  .earth-shade {
+    fill: var(--space);
+    opacity: 0.28;
+  }
+
+  [data-dev='earth'] {
+    transform-origin: 50% 50%;
+  }
+
+  .signal {
+    opacity: 0;
+    transition: opacity var(--slow);
+  }
+
+  .wave {
+    fill: none;
+    stroke: var(--sun);
+    stroke-width: 7;
+    stroke-linecap: round;
+  }
+
+  /* ---------- Ground and shell ---------- */
+
+  .moon {
+    fill: var(--sc-moon);
+    stroke: var(--ink);
+    stroke-width: 5;
+    transition: fill var(--sc-dawn-time);
+  }
+
+  .crater {
+    fill: var(--sc-moon-2);
+    transition: fill var(--sc-dawn-time);
+  }
+
+  .foot {
+    fill: var(--sc-shell-2);
+  }
+
+  .shell {
+    fill: var(--sc-shell);
+  }
+
+  .roof {
+    fill: var(--sc-shell-2);
+  }
+
+  .vent {
+    fill: var(--sc-metal);
+  }
+
+  .room-bg {
+    fill: var(--sc-room);
+    transition: fill var(--sc-slide);
+  }
+
+  .room-floor {
+    fill: var(--sc-floor);
+    transition: fill var(--sc-slide);
+  }
+
+  .room-glow {
+    fill: url('#sc-lamp');
+    opacity: var(--sc-glow);
+    transition: opacity var(--sc-slide);
+    pointer-events: none;
+  }
+
+  .room-edge {
+    fill: none;
+    stroke-width: 6;
+  }
+
+  .porthole-glass {
+    fill: var(--space-2);
+    transition: fill var(--sc-dawn-time);
+  }
+
+  /* ---------- Heat-loss arrow ---------- */
+
+  .heat-arrow {
+    transform-origin: 104px 640px;
+    transition: scale var(--slow) var(--bounce);
+  }
+
+  .heat-arrow__shape {
+    fill: var(--coral);
+  }
+
+  .heat-arrow__waves {
+    fill: none;
+    stroke: var(--card);
+    stroke-width: 5;
+    stroke-linecap: round;
+  }
+
+  &[data-warmth='0'] .heat-arrow {
+    scale: 1.28;
+    animation: sc-leak 0.9s ease-in-out infinite;
+  }
+
+  &[data-warmth='2'] .heat-arrow {
+    scale: 0.42;
+  }
+
+  /* ---------- Greenhouse ---------- */
+
+  .lamp {
+    fill: var(--sc-off);
+    transition: fill var(--fast);
+  }
+
+  .beam {
+    fill: var(--sun);
+    opacity: 0;
+    transition: opacity var(--slow);
+  }
+
+  .soil {
+    fill: #7a5236;
+  }
+
+  .planter {
+    fill: var(--teal);
+  }
+
+  .planter-drop {
+    fill: var(--teal-soft);
+  }
+
+  .stem {
+    fill: none;
+    stroke: var(--leaf);
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+
+  .leaf {
+    fill: var(--leaf);
+  }
+
+  .crop {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition:
+      scale var(--slow) var(--bounce),
+      opacity var(--fast);
+
+    &.crop--grown {
+      scale: 0.2;
+      opacity: 0;
+    }
+  }
+
+  &[data-lights='1'] {
+    .lamp {
+      fill: var(--sun);
+    }
+
+    .beam {
+      opacity: 0.42;
+    }
+  }
+
+  &:not([data-crop='0']) {
+    .crop--seed {
+      opacity: 0;
+    }
+
+    .crop--grown {
+      scale: 1;
+      opacity: 1;
+    }
+  }
+
+  /* ---------- Crew Quarters ---------- */
+
+  .beacon-dome {
+    fill: var(--sc-off);
+  }
+
+  .beacon-rays,
+  .beacon-mark {
+    fill: none;
+    stroke: var(--coral);
+    stroke-width: 6;
+    stroke-linecap: round;
+    opacity: 0;
+  }
+
+  .beacon-mark {
+    stroke: var(--card);
+    stroke-width: 4;
+  }
+
+  &[data-alert='1'] {
+    .beacon-dome {
+      fill: var(--coral);
+      animation: sc-flash 0.9s steps(2, jump-none) infinite;
+    }
+
+    .beacon-rays {
+      opacity: 1;
+      animation: sc-flash 0.9s steps(2, jump-none) infinite;
+    }
+
+    .beacon-mark {
+      opacity: 1;
+    }
+  }
+
+  .blanket {
+    fill: var(--sky-blue);
+  }
+
+  .pillow {
+    fill: var(--card);
+  }
+
+  .blanket-fold {
+    stroke: var(--ink);
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  .bag-handle {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+
+  .bag-a {
+    fill: var(--sky-blue);
+  }
+
+  .bag-b {
+    fill: var(--sun);
+  }
+
+  .bag-seam {
+    stroke: var(--ink);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 2 7;
+  }
+
+  .bag-mark {
+    fill: var(--card);
+    stroke: var(--ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+  }
+
+  .bag-move {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    transition: transform var(--sc-slide) var(--bounce);
+  }
+
+  &[data-bag='1'] .bag-move {
+    transform: translate(40px, -36px) rotate(-10deg) scale(1.12);
+    animation: sc-float 1s ease-in-out infinite;
+  }
+
+  &[data-bag='2'] .bag-move {
+    transform: translate(202px, 106px);
+  }
+
+  .shelter-arch {
+    fill: var(--sc-floor);
+    fill-opacity: 0.55;
+    stroke-dasharray: 4 14;
+    transition: fill-opacity var(--slow);
+  }
+
+  .shelter-wall {
+    fill: none;
+    stroke: var(--sky-blue);
+    stroke-width: 26;
+    stroke-linecap: round;
+    opacity: 0;
+    transition: opacity var(--slow);
+  }
+
+  .shelter-seams {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 26;
+    stroke-dasharray: 3 37;
+    opacity: 0;
+    transition: opacity var(--slow);
+  }
+
+  .shield-plate {
+    fill: var(--sc-shell);
+    stroke-dasharray: 4 10;
+    transition: fill var(--slow);
+  }
+
+  .shield-open {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+
+  .spot {
+    fill: var(--sun);
+    fill-opacity: 0.35;
+    stroke: var(--ink);
+    stroke-width: 4;
+    stroke-dasharray: 9 8;
+  }
+
+  .spot-arrow {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transform-box: fill-box;
+  }
+
+  &[data-bag='1'] .spot-arrow {
+    opacity: 1;
+    animation: sc-bob 0.8s ease-in-out infinite;
+  }
+
+  &[data-shelter='protected'] {
+    .shelter-arch {
+      fill-opacity: 0.9;
+      stroke-dasharray: none;
+    }
+
+    .shelter-wall {
+      opacity: 1;
+    }
+
+    .shelter-seams {
+      opacity: 0.55;
+    }
+
+    .shield-plate {
+      fill: var(--teal);
+      stroke-dasharray: none;
+    }
+
+    .shield .tick {
+      opacity: 1;
+    }
+
+    .shield-open,
+    .spot {
+      opacity: 0;
+    }
+  }
+
+  /* ---------- Power Room ---------- */
+
+  .pipe-edge {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 30;
+    stroke-linejoin: round;
+  }
+
+  .pipe {
+    fill: none;
+    stroke: var(--sc-metal);
+    stroke-width: 20;
+    stroke-linejoin: round;
+  }
+
+  .valve-body {
+    fill: var(--sc-shell);
+  }
+
+  .wheel {
+    fill: var(--coral);
+  }
+
+  .wheel-spokes {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+
+  .knob {
+    fill: var(--sun);
+  }
+
+  .valve-wheel {
+    transform-origin: 200px 640px;
+    transition: rotate var(--slow) var(--bounce);
+  }
+
+  .tag-plate {
+    fill: var(--coral);
+    transition: fill var(--fast);
+  }
+
+  .tag-open {
+    fill: none;
+    stroke: var(--card);
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  &[data-valve='1'] {
+    .valve-wheel {
+      rotate: 135deg;
+    }
+
+    .tag-plate {
+      fill: var(--teal);
+    }
+
+    .valve-tag .tick {
+      opacity: 1;
+    }
+
+    .tag-open {
+      opacity: 0;
+    }
+  }
+
+  .battery-body {
+    fill: var(--ink-soft);
+  }
+
+  .cell {
+    rect {
+      fill: var(--sc-off);
+      stroke: var(--ink);
+      stroke-width: 3;
+      stroke-dasharray: 5 5;
+      transition: fill var(--fast);
+    }
+
+    .bolt {
+      fill: var(--ink);
+      opacity: 0;
+      transition: opacity var(--fast);
+    }
+  }
+
+  &[data-power='1'] .cell:nth-child(-n + 1),
+  &[data-power='2'] .cell:nth-child(-n + 2),
+  &[data-power='3'] .cell:nth-child(-n + 3),
+  &[data-power='4'] .cell:nth-child(-n + 4),
+  &[data-power='5'] .cell:nth-child(-n + 5),
+  &[data-power='6'] .cell:nth-child(-n + 6),
+  &[data-power='7'] .cell:nth-child(-n + 7) {
+    rect {
+      fill: var(--sun);
+      stroke-dasharray: none;
+    }
+
+    .bolt {
+      opacity: 1;
+    }
+  }
+
+  /* ---------- Life Support ---------- */
+
+  .machine {
+    fill: var(--teal-soft);
+
+    &.machine--water {
+      fill: var(--sc-shell);
+    }
+  }
+
+  .fan-window {
+    fill: var(--space-2);
+  }
+
+  .fan {
+    fill: var(--card);
+    stroke: var(--ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+    transform-origin: 548px 668px;
+    animation: sc-spin 3.6s linear infinite;
+  }
+
+  .o2-bubbles {
+    fill: var(--teal-soft);
+    stroke: var(--ink);
+    stroke-width: 3;
+    animation: sc-rise 2.4s ease-in infinite;
+  }
+
+  .status-plate {
+    fill: var(--teal);
+    transition: fill var(--fast);
+  }
+
+  .gen-status .tick {
+    opacity: 1;
+  }
+
+  .status-stop {
+    fill: none;
+    stroke: var(--card);
+    stroke-width: 5;
+    stroke-linecap: round;
+    opacity: 0;
+  }
+
+  &[data-generator='on'] .fan {
+    animation-duration: 0.9s;
+  }
+
+  &[data-generator='off'] {
+    .fan {
+      animation: none;
+    }
+
+    .o2-bubbles {
+      animation: none;
+      opacity: 0;
+    }
+
+    .status-plate {
+      fill: var(--coral);
+    }
+
+    .gen-status .tick {
+      opacity: 0;
+    }
+
+    .status-stop {
+      opacity: 1;
+    }
+  }
+
+  /* The alarm only flashes while the oxygen crisis is the active one. */
+  &[data-generator='off'][data-active='oxygen'] .status-plate {
+    animation: sc-flash 1s steps(2, jump-none) infinite;
+  }
+
+  .tank {
+    fill: var(--sc-shell);
+  }
+
+  .tank-fill {
+    fill: var(--sky-blue);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition: scale var(--slow) ease-in-out;
+  }
+
+  .reserve .tick {
+    opacity: 1;
+  }
+
+  .tank-empty {
+    fill: none;
+    stroke: var(--ink-soft);
+    stroke-width: 6;
+    stroke-linecap: round;
+    opacity: 0;
+    transition: opacity var(--fast) var(--slow);
+  }
+
+  &[data-reserve='0'] {
+    .tank-fill {
+      scale: 1 0.06;
+    }
+
+    .tank {
+      stroke-dasharray: 6 10;
+    }
+
+    .reserve .tick {
+      opacity: 0;
+    }
+
+    .tank-empty {
+      opacity: 1;
+    }
+  }
+
+  /* ---------- Water Workshop ---------- */
+
+  .bottle {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+
+  .bottle-body {
+    fill: transparent;
+    stroke: var(--ink-soft);
+    stroke-width: 3;
+    stroke-dasharray: 4 5;
+    transition: fill var(--fast);
+  }
+
+  .bottle-cap,
+  .bottle-wave {
+    opacity: 0;
+    transition: opacity var(--fast);
+  }
+
+  .bottle-cap {
+    fill: var(--ink);
+  }
+
+  .bottle-wave {
+    fill: none;
+    stroke: var(--card);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  &[data-water='1'] .bottle:nth-child(-n + 1),
+  &[data-water='2'] .bottle:nth-child(-n + 2),
+  &[data-water='3'] .bottle:nth-child(-n + 3),
+  &[data-water='4'] .bottle:nth-child(-n + 4),
+  &[data-water='5'] .bottle:nth-child(-n + 5) {
+    .bottle-body {
+      fill: var(--sky-blue);
+      stroke: var(--ink);
+      stroke-dasharray: none;
+    }
+
+    .bottle-cap,
+    .bottle-wave {
+      opacity: 1;
+    }
+  }
+
+  .drop {
+    fill: var(--sky-blue);
+    stroke: var(--ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+  }
+
+  .crack {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+  }
+
+  .puddle {
+    fill: var(--sky-blue);
+    stroke: var(--ink);
+    stroke-width: 3;
+    opacity: 0;
+  }
+
+  .badge {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    scale: 0.4;
+    transition:
+      opacity var(--fast),
+      scale var(--slow) var(--bounce);
+
+    .tick {
+      opacity: 1;
+    }
+
+    &.badge--warn .o {
+      fill: var(--warn-bg);
+    }
+
+    &.badge--ok .o,
+    &.badge--printed .o {
+      fill: var(--teal);
+    }
+  }
+
+  .badge-mark {
+    fill: none;
+    stroke: var(--warn-ink);
+    stroke-width: 5;
+    stroke-linecap: round;
+  }
+
+  &[data-recycler='broken'] {
+    .badge--warn {
+      opacity: 1;
+      scale: 1;
+      animation: sc-flash 1s steps(2, jump-none) infinite;
+    }
+
+    .crack,
+    .puddle {
+      opacity: 1;
+    }
+
+    .drop {
+      fill: var(--sc-off);
+    }
+  }
+
+  &[data-recycler='ok'] .badge--ok,
+  &[data-clip='1'] .badge--printed {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .spool {
+    fill: var(--coral);
+  }
+
+  .frame-edge {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 18;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .frame {
+    fill: none;
+    stroke: var(--sun);
+    stroke-width: 9;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .head {
+    fill: var(--sc-shell);
+  }
+
+  .nozzle {
+    fill: var(--coral);
+  }
+
+  .bed {
+    fill: var(--sc-metal);
+  }
+
+  .print-layers {
+    fill: none;
+    stroke: var(--coral);
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+
+  /* ---------- Roof ---------- */
+
+  .panel-face {
+    fill: var(--space-2);
+    transition: fill var(--sc-dawn-time);
+  }
+
+  .panel-grid {
+    fill: none;
+    stroke: var(--sky-blue);
+    stroke-width: 3;
+    opacity: 0.7;
+  }
+
+  .charge {
+    fill: var(--sun);
+    opacity: 0;
+    transform-box: fill-box;
+    transition: opacity var(--slow) var(--sc-dawn-time);
+  }
+
+  .dish {
+    fill: var(--sc-shell);
+  }
+
+  .cable {
+    fill: none;
+    stroke: var(--coral);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: opacity var(--slow);
+
+    &.cable--tidy {
+      opacity: 0;
+    }
+  }
+
+  .cable-end {
+    fill: var(--sun);
+    stroke: var(--ink);
+    stroke-width: 3;
+    transition: opacity var(--slow);
+  }
+
+  .clip {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    scale: 0.3;
+    transition:
+      opacity var(--fast),
+      scale var(--slow) var(--bounce);
+  }
+
+  .clip-body {
+    fill: var(--sun);
+  }
+
+  .clip-mark {
+    stroke: var(--ink);
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  &[data-cable='tidy'] {
+    .cable--loose,
+    .cable-end {
+      opacity: 0;
+    }
+
+    .cable--tidy {
+      opacity: 1;
+    }
+  }
+
+  &[data-clip='1'] .clip {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .rover-body {
+    fill: var(--sun);
+  }
+
+  .rover-window {
+    fill: var(--sky-blue);
+  }
+
+  [data-dev='rover'] .wheel {
+    fill: var(--ink-soft);
+  }
+
+  /* ---------- Cold cabin (warmth 0), warm cabin (warmth 2) ---------- */
+
+  .frost {
+    fill: none;
+    stroke: var(--sky-blue);
+    stroke-width: 5;
+    stroke-linecap: round;
+    opacity: 0;
+    transition: opacity var(--slow);
+  }
+
+  &[data-warmth='0'] {
+    --sc-room: color-mix(in srgb, var(--room) 52%, var(--sky-blue));
+    --sc-floor: color-mix(in srgb, var(--room-2) 55%, var(--sky-blue));
+    --sc-glow: 0.1;
+
+    .frost {
+      opacity: 1;
+    }
+
+    .scene__crew {
+      animation: sc-shiver 0.22s linear infinite;
+    }
+
+    .scene__note--cold {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  &[data-warmth='2'] {
+    --sc-room: color-mix(in srgb, var(--room) 86%, var(--sun));
+    --sc-glow: 0.8;
+  }
+
+  /* ---------- Sunrise: one relight of the whole scene ---------- */
+
+  &[data-sunrise='1'] {
+    --sc-room: color-mix(in srgb, var(--room) 74%, var(--sun));
+    --sc-floor: color-mix(in srgb, var(--room-2) 80%, var(--sun));
+    --sc-glow: 1;
+    --sc-moon: #d9cfc4;
+    --sc-moon-2: #b3a79f;
+
+    .sky-dawn {
+      opacity: 1;
+    }
+
+    .stars {
+      opacity: 0.2;
+    }
+
+    .sun {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    .sun-rays {
+      animation: sc-spin 24s linear infinite;
+    }
+
+    .porthole-glass {
+      fill: var(--sc-dawn-1);
+    }
+
+    .panel-face {
+      fill: var(--sky-blue);
+    }
+
+    .charge {
+      opacity: 1;
+      animation: sc-bob 0.9s ease-in-out infinite;
+    }
+
+    .scene__note--charge {
+      opacity: 1;
+      scale: 1;
+      transition-delay: var(--sc-dawn-time);
+    }
+
+    .scene__crew {
+      animation: sc-hop 0.55s ease-out 4 var(--sc-slide);
+    }
+
+    .scene__crew--boy {
+      animation-delay: calc(var(--sc-slide) + 140ms);
+    }
+  }
+
+  /* ---------- Signal sent ---------- */
+
+  &[data-sent='1'] {
+    .signal {
+      opacity: 1;
+    }
+
+    .wave {
+      animation: sc-signal 1.3s linear infinite;
+
+      &.wave--2 {
+        animation-delay: -0.43s;
+      }
+
+      &.wave--3 {
+        animation-delay: -0.87s;
+      }
+    }
+
+    .scene__note--signal {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  /* ---------- Crew sprites ---------- */
+
+  .scene__crew {
+    position: absolute;
+    left: var(--sc-crew-x);
+    top: var(--sc-crew-y);
+    z-index: 1;
+    width: auto;
+    height: 15.5%;
+    translate: -50% -100%;
+    pointer-events: none;
+    filter: drop-shadow(0 0.35cqi 0 rgb(23 35 60 / 0.22));
+    transition:
+      left var(--sc-slide) ease-in-out,
+      top var(--sc-slide) ease-in-out;
+
+    &.scene__crew--girl {
+      margin-left: -2.4%;
+    }
+
+    &.scene__crew--boy {
+      margin-left: 2.4%;
+    }
+  }
+
+  &[data-room='greenhouse'] {
+    --sc-crew-x: 37.4%;
+  }
+
+  &[data-room='power'] {
+    --sc-crew-x: 24.2%;
+    --sc-crew-y: 83.5%;
+  }
+
+  &[data-room='life'] {
+    --sc-crew-x: 53.6%;
+    --sc-crew-y: 83.5%;
+  }
+
+  &[data-room='water'] {
+    --sc-crew-x: 77.4%;
+    --sc-crew-y: 83.5%;
+  }
+
+  &[data-room='roof'] {
+    --sc-crew-x: 53%;
+    --sc-crew-y: 20.2%;
+  }
+
+  /* ---------- Text notes over the art ---------- */
+
+  .scene__notes {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .scene__note {
+    position: absolute;
+    translate: -50% -50%;
+    scale: 0.6;
+    opacity: 0;
+    padding: 0.2em 0.7em;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: clamp(10px, 1.6cqi, 16px);
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition:
+      opacity var(--fast),
+      scale var(--slow) var(--bounce);
+
+    &.scene__note--cold {
+      left: 23.5%;
+      top: 58%;
+      background: var(--teal-soft);
+    }
+
+    &.scene__note--alert {
+      left: 71%;
+      top: 26.6%;
+      background: var(--warn-bg);
+      color: var(--warn-ink);
+      border-color: var(--warn-ink);
+    }
+
+    &.scene__note--charge {
+      left: 74.6%;
+      top: 5%;
+      background: var(--sun);
+    }
+
+    &.scene__note--signal {
+      left: 22.5%;
+      top: 20.5%;
+    }
+  }
+
+  &[data-alert='1'] .scene__note--alert {
+    opacity: 1;
+    scale: 1;
+  }
+
+  /* ---------- Hotspots: real buttons over the art ---------- */
+
+  .scene__hotspots {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+  }
+
+  .hot {
+    position: absolute;
+    translate: -50% -50%;
+    min-width: var(--tap);
+    min-height: var(--tap);
+    margin: 0;
+    padding: 0;
+    border: 3px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--fast),
+      border-color var(--fast);
+
+    @media (hover: hover) {
+      &:hover {
+        background: rgb(255 255 255 / 0.14);
+      }
+    }
+
+    &:active {
+      background: rgb(255 255 255 / 0.22);
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--card);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 8px var(--ink);
+    }
+
+    &.hot--toy {
+      border-radius: 50%;
+    }
+
+    &.is-active {
+      z-index: 1;
+      border-color: var(--sun);
+      box-shadow:
+        0 0 0 2px var(--ink),
+        0 0 1.6cqi 0.3cqi var(--sun);
+      animation: sc-pulse 1.4s ease-in-out infinite;
+
+      .hot__chip {
+        background: var(--sun);
+      }
+    }
+  }
+
+  .hot__chip {
+    position: absolute;
+    left: 50%;
+    bottom: 3%;
+    translate: -50% 0;
+    padding: 0.12em 0.6em;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: clamp(9px, 1.45cqi, 15px);
+    font-weight: 800;
+    line-height: 1.25;
+    white-space: nowrap;
+    box-shadow: 0 2px 0 rgb(23 35 60 / 0.25);
+  }
+
+  .hot__cue {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    translate: -50% -50%;
+    display: none;
+    align-items: center;
+    gap: 0.25em;
+    padding: 0.2em 0.7em 0.2em 0.5em;
+    border: 2px solid var(--card);
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--card);
+    font-size: clamp(11px, 1.8cqi, 18px);
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    animation: sc-bob 0.8s ease-in-out infinite;
+
+    svg {
+      width: 1em;
+      height: 1em;
+    }
+  }
+
+  &[data-open='0'] .hot.is-active .hot__cue {
+    display: inline-flex;
+  }
+
+  /* The antenna sits at the top edge: keep its cue inside the scene. */
+  .hot[data-device='antenna'] .hot__cue {
+    top: auto;
+    bottom: 100%;
+    left: 100%;
+    translate: -30% 110%;
+  }
+
+  /* ---------- Reduced motion: no wiggle, spin or travel; end states only ---------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    & *,
+    & *::before,
+    & *::after {
+      animation: none !important;
+    }
+
+    &[data-sent='1'] {
+      .wave--2 {
+        translate: -70px 0;
+      }
+
+      .wave--3 {
+        translate: -140px 0;
+      }
+    }
+  }
+}
+
+@keyframes sc-wiggle {
+  0%,
+  100% {
+    rotate: -2.5deg;
+  }
+
+  50% {
+    rotate: 2.5deg;
+  }
+}
+
+@keyframes sc-pulse {
+  50% {
+    box-shadow:
+      0 0 0 2px var(--ink),
+      0 0 2.6cqi 0.8cqi var(--sun);
+  }
+}
+
+@keyframes sc-bob {
+  50% {
+    transform: translateY(-14%);
+  }
+}
+
+@keyframes sc-float {
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+@keyframes sc-twinkle {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes sc-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes sc-rise {
+  0% {
+    translate: 0 14px;
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    translate: 0 -22px;
+    opacity: 0;
+  }
+}
+
+@keyframes sc-flash {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes sc-leak {
+  50% {
+    translate: -8px 0;
+  }
+}
+
+@keyframes sc-shiver {
+  0%,
+  100% {
+    transform: translateX(-1.5%);
+  }
+
+  50% {
+    transform: translateX(1.5%);
+  }
+}
+
+@keyframes sc-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  45% {
+    transform: translateY(-22%);
+  }
+}
+
+@keyframes sc-signal {
+  0% {
+    translate: 0 0;
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    translate: -180px -6px;
+    opacity: 0;
+  }
+}
