@@ -16,7 +16,7 @@ Lanes and their files are in `specs/plan.md` §4. The contract is in §5.
   **Done when:** tests cover QS-01, 02, 03, 05, 06, 07, 10, 12 and the PRD base-supplies walkthrough, all green.
 - [~] **T2 · Lane B · Moon-base scene and crew sprites.** SVG base, hotspot buttons, device state styles driven by `data-*`, crop crew sprites to WebP, crew placement per active room.
   **Done when:** scene renders, every device state toggles from `updateScene`, crew assets total < 400 KB.
-- [~] **T3 · Lane C · Shell.** `main.js` store, start + loadout screens, pictorial HUD, decision tray (select → preview → Confirm Choice → result → Continue), recovery card, end card, all copy in `content.js`.
+- [x] **T3 · Lane C · Shell.** `main.js` store, start + loadout screens, pictorial HUD, decision tray (select → preview → Confirm Choice → result → Continue), recovery card, end card, all copy in `content.js`.
   **Done when:** loadout blocks 10,400; the full story is drivable by keyboard and tap.
 
 ## Phase 2 — 1:10–1:40
