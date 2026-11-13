@@ -1,0 +1,77 @@
+/* Design tokens. Owner: lead. Lanes read these, never redefine them. */
+:root {
+  /* Colour */
+  --space: #0b1730;
+  --space-2: #14254a;
+  --room: #fff5e5;
+  --room-2: #f6e6cc;
+  --ink: #17233c;
+  --ink-soft: #4a5672;
+  --teal: #0d766e;
+  --teal-soft: #d4efec;
+  --warn-bg: #ffe3a3;
+  --warn-ink: #633a00;
+  --card: #ffffff;
+  --line: #e2d3b8;
+  --sun: #ffc65c;
+  --coral: #ef6f5c;
+  --leaf: #4f9d4a;
+  --sky-blue: #5aa9e6;
+
+  /* Shape and space */
+  --gap: 8px;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --tap: 44px;
+  --shadow: 0 6px 0 rgb(23 35 60 / 0.14);
+  --shadow-soft: 0 10px 30px rgb(11 23 48 / 0.25);
+
+  /* Type */
+  --font: ui-rounded, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --text: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --leading: 1.4;
+
+  /* Motion */
+  --fast: 160ms;
+  --slow: 600ms;
+  --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fast: 1ms;
+    --slow: 1ms;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--space);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--text);
+  line-height: var(--leading);
+  -webkit-text-size-adjust: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
