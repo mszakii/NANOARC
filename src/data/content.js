@@ -77,6 +77,27 @@ export const UI = {
   endSupplies: 'What you had left',
   playAgain: 'Play Again',
 
+  // Intro still (video slot: intro). Shown in place of the optional intro clip.
+  introAlt: 'Commander Noor and Engineer Sami in their space suits',
+  introLine: 'Night is falling on the Moon base. The crew needs a commander to keep them safe until sunrise.',
+
+  // Water Training (practice mode).
+  training: 'Water Training',
+  trainingTitle: 'Water Training',
+  trainingIntro: 'Practice the water crisis. You start with 3 bottles every time. Your story mission does not change.',
+  trainKit: 'Train with Repair Kit',
+  trainKitWhat: 'The kit fixes the recycler in 1 turn.',
+  trainStandard: 'Train with Standard Tools',
+  trainStandardWhat: 'Normal tools fix the recycler in 2 turns.',
+  trainBoth: 'Try Both Repair Paths',
+  trainDone: 'Training done! Try the other way and compare the bottles left.',
+  backToStart: 'Back to Start',
+
+  compareIss: 'Compare ISS Recovery',
+  notebook: 'Open Notebook',
+
+  summaryTitle: 'Your choices',
+
   errorTitle: 'Mission control is not ready',
   errorBody: 'The mission rules are still being built. Try again in a moment.',
 };
@@ -191,7 +212,10 @@ export const STEPS = {
     who: 'girl',
     mood: 'worried',
     science: 'water',
-    say: (s) => `The crew drank 1 bottle. Now the water recycler is broken. You have ${plural(s.res.water, 'bottle', 'bottles')}. Each repair turn uses 1 bottle.`,
+    say: (s) =>
+      s.mode === 'practice'
+        ? `Training time! The water recycler is broken. You have ${plural(s.res.water, 'bottle', 'bottles')}. Each repair turn uses 1 bottle.`
+        : `The crew drank 1 bottle. Now the water recycler is broken. You have ${plural(s.res.water, 'bottle', 'bottles')}. Each repair turn uses 1 bottle.`,
     options: {
       standard: { label: 'Standard Repair', icon: '🔧', hint: 'A slow fix with the normal tools.' },
       kit: { label: 'Use Repair Kit', icon: '🧰', hint: 'A fast fix with the kit you packed.' },
@@ -312,6 +336,23 @@ export function noteTexts(last, res) {
   return (last.notes ?? []).map((code) => NOTES[code]?.(a) ?? '').filter(Boolean);
 }
 
+/** End-card sentences built from the decisions the player actually confirmed. */
+export function summaryLines(state) {
+  const did = (step, option) => state.history.some((h) => h.step === step && h.option === option);
+  const lines = [];
+  if (did('greenhouse', 'save_power') && did('oxygen', 'restart')) lines.push('You saved power at the greenhouse. That power restarted the oxygen generator later.');
+  else if (did('greenhouse', 'lights_on')) lines.push('You kept the greenhouse lights on. The plants grew a little.');
+  else if (did('greenhouse', 'save_power')) lines.push('You saved power at the greenhouse.');
+  if (did('oxygen', 'reserve')) lines.push('You used the emergency oxygen. You kept your power.');
+  if (did('shelter', 'early')) lines.push('You built the shelter early. It cost 1 power unit.');
+  if (did('shelter', 'at_alert')) lines.push(state.loadout.mealPack ? 'You built the shelter at the alert. The ready meal saved time and warmth.' : 'You built the shelter at the alert. Cooking took an extra turn.');
+  if (did('repair', 'kit')) lines.push('Your repair kit fixed the water in 1 turn. It saved 1 bottle.');
+  if (did('repair', 'standard')) lines.push('The standard repair took 2 turns and 2 bottles.');
+  if (did('plastic', 'print')) lines.push('Your printed clip held the antenna cable.');
+  if (did('plastic', 'sort')) lines.push('You sorted the plastic and kept your power.');
+  return lines;
+}
+
 export const RECOVERY = {
   valve: 'The cabin got too cold. Try the heat valve again.',
   oxygen: 'The cabin air got too thin. Try the oxygen crisis again.',
@@ -325,6 +366,20 @@ export const SCIENCE_UI = {
   teaching: 'The units and turns in this game are teaching values. They are made up to keep the game simple. They are not real measurements.',
   sources: 'Sources',
   newTab: '(opens in a new tab)',
+  issModes: [
+    { pct: 70, drops: 14, label: '70% historical recovery' },
+    { pct: 85, drops: 17, label: '85% historical recovery' },
+  ],
+  issTreated: (n) => `${n} of 20 drops go to Further Treatment.`,
+  issLeft: (n) => `${n} drops stay behind as brine.`,
+  issWhy: {
+    70: 'Less water recovered, but a lower risk of mineral buildup.',
+    85: 'More water recovered, but minerals built up and stopped the machine.',
+  },
+  issLegendTreated: 'Recovered water → Further Treatment',
+  issLegendLeft: 'Left behind',
+  issNote: 'Illustration only. Your crew’s drinking water does not change.',
+  stillCaption: 'Notebook still',
   close: 'Close',
 };
 
@@ -382,6 +437,28 @@ export const SCIENCE = {
       { label: 'NASA historical report', href: 'https://ntrs.nasa.gov/citations/20110023178' },
       { label: 'NASA water treatment overview', href: 'https://www.nasa.gov/missions/station/nasa-achieves-water-recovery-milestone-on-international-space-station/' },
     ],
+  },
+  iss: {
+    title: 'Compare ISS Recovery',
+    compare: true,
+    body: [
+      'Historical record: the space station’s urine processor first recovered 85% of the water. Mineral buildup (gypsum) then stopped the machine. The team lowered recovery to 70% to reduce the risk of buildup.',
+      'Pick a setting. Each drop stands for a share of the water. Recovered water goes on to Further Treatment before anyone drinks it.',
+    ],
+    links: [
+      { label: 'NASA historical report (UPA recovery and precipitation)', href: 'https://ntrs.nasa.gov/citations/20110023178' },
+      { label: 'NASA water treatment overview', href: 'https://www.nasa.gov/missions/station/nasa-achieves-water-recovery-milestone-on-international-space-station/' },
+    ],
+  },
+  notebook: {
+    title: 'Notebook: a water test',
+    // Video slot: notebook. This still and text stand in for the optional notebook clip.
+    still: 'notebook',
+    body: [
+      'In a lab on Earth, scientists tested a special filter called a membrane. It cleaned a small sample of used water.',
+      'This is a test sample only. It is not drinking water, and it does not change the crew’s bottles.',
+    ],
+    links: [{ label: 'Khumalo et al., laboratory membrane distillation study', href: 'https://doi.org/10.1016/j.seppur.2018.10.035' }],
   },
   plastic: {
     title: 'Printing with old plastic',
