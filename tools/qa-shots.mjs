@@ -239,6 +239,62 @@ async function motionCheck(reduce) {
   const settled = await evaluate(snap);
   console.log(JSON.stringify({ reduce, after60ms: early, after1460ms: settled }));
 }
+// Touch: emulated phone taps (Input.dispatchTouchEvent) on Water Training, the ISS comparison and a recovery.
+async function tap(selector) {
+  const box = await evaluate(`(() => { const e = document.querySelector('${selector}'); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()`);
+  if (!box) throw new Error('tap target missing: ' + selector);
+  const [x, y] = box;
+  await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await sleep(450);
+}
+const read = (expr) => evaluate(expr);
+async function touchRun() {
+  await send('Emulation.setDeviceMetricsOverride', { width: 375, height: 812, deviceScaleFactor: 2, mobile: true });
+  await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  const water = `document.querySelector('[data-res="water"] .ctr-val')?.textContent.trim()`;
+  const out = [];
+  await tap('[data-action="training"]');
+  for (const [mode, option, bottles, turns] of [['kit', 'kit', '2', 1], ['standard', 'standard', '1', 2]]) {
+    await tap(`[data-action="practice"][data-id="${mode}"]`);
+    const start = await read(water);
+    await tap('.hot[data-device="recycler"]');
+    await tap(`[data-action="select"][data-id="${option}"]`);
+    const preview = await read(`document.querySelector('.preview')?.textContent.replace(/\s+/g, ' ').trim()`);
+    await tap('[data-action="confirm"]');
+    await sleep(turns * 1000 + 600);
+    const result = await read(`document.querySelector('.result')?.textContent.replace(/\s+/g, ' ').trim()`);
+    out.push(`training ${mode}: start ${start} bottles; preview "${preview}"; end ${await read(water)} bottles; "${result}"`);
+    if (mode === 'kit') {
+      await tap('[data-action="science"][data-id="iss"]');
+      const iss = async () => read(`(() => { const d = document.querySelector('#science-dialog'); return { drops: d.querySelectorAll('.iss-drop').length, recovered: d.querySelectorAll('.iss-drop[data-recovered="true"]').length, text: d.querySelector('[role="status"] strong')?.textContent, source: [...d.querySelectorAll('.links a')].some((a) => a.href.includes('ntrs.nasa.gov')) }; })()`);
+      const at70 = await iss();
+      await tap('[data-iss-mode="85"]');
+      const at85 = await iss();
+      await tap('[data-science-close]');
+      out.push(`ISS: 70% ${at70.recovered}/${at70.drops} "${at70.text}" source=${at70.source}; 85% ${at85.recovered}/${at85.drops} "${at85.text}"; water after close ${await read(water)}`);
+      await tap('[data-action="training"]');
+    }
+  }
+  const shot = await send('Page.captureScreenshot', { format: 'png' });
+  writeFileSync(join(outDir, `${label}-touch-training-375x812.png`), Buffer.from(shot.data, 'base64'));
+  console.log(out.join(String.fromCharCode(10)));
+}
+if (process.env.TOUCH) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    await touchRun();
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
 if (process.env.MOTION) {
   try {
     await send('Page.enable');

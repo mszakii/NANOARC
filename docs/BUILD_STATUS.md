@@ -1,9 +1,38 @@
 # Qamar Square — Build status
 
 **Updated:** 14 November 2026 (Africa/Cairo).
-**Milestone:** approved implementation and all checks available in this environment complete. Reduced motion, final production flows, portrait layout and emulated touch passed. Physical-phone checks are Ahmed's remaining manual check.
-**Current QA baseline:** follow-up began clean at `e51c098`. Final production code is `8b4fa53`; the subsequent verification/checklist commit changes documentation only. All commits remain local.
-**Integration history:** the scene, scene CSS, ten crew WebPs, crop script and scene preview were already committed in `8396e18` (following `be806fa`). Integration was committed as `e51c098`. No previous work was discarded; nothing was pushed during this follow-up.
+**Milestone:** UI fit, active-device marker, icon set and motion pass complete and verified in this environment. Physical-phone checks remain Ahmed's (see `docs/MANUAL_CHECKS.md`).
+**Latest working revision:** see the "UI pass (14 Nov)" section below for commits `1590f9c`, `7d45ff1`, `85e9fb2` and the status commit after them. All commits are local; nothing was pushed.
+**Integration history:** the scene, scene CSS, ten crew WebPs, crop script and scene preview were committed in `8396e18`; integration in `e51c098`; favicon and reduced-motion record in `8b4fa53`; phone checklist in `3050d01`. No earlier work was discarded.
+
+## UI pass (14 Nov) — fit, marker, icons, motion
+
+| Commit | What changed |
+|---|---|
+| `1590f9c` | Decision screen fits the viewport: compact HUD, fixed decision foot (status slot + primary action keep their place), Science button in the panel head, water extras outside the choice state, short phone HUD labels (full labels stay for screen readers). One local inline-SVG icon set (`src/ui/icons.js`) replaces every emoji in start, packing, HUD, choices, previews, science, recovery and ending. New `src/styles/fit.css`. QA script `tools/qa-shots.mjs` and before screenshots in `docs/qa/`. |
+| `7d45ff1` | Active device: wide glow replaced by a two-ring outline on the device, a **Tap** pointer with a tail anchored to it, and an ink label. Finished devices get a teal label with a check. The speaking crew member walks to a free spot beside the active device; the partner waits in another room; both go to the roof at sunrise. A short note (for example **Warmth 1 → 2**) pins the change above the device used. Phones show only active and finished labels; Restart moves under the panel on phones. Valve hotspot tightened to the valve. |
+| `85e9fb2` | Motion tied to decisions: the speaker sways while a crisis is undecided, hops after a good result, shivers on recovery; the used device pops; valve turn and heat-arrow shrink unchanged. Device keyboard focus is a teal dashed outline (distinct from active and finished). Reduced motion shows end states at once (portrait-hop override fixed). |
+
+Rules engine, frozen contracts, English copy meaning, NASA attribution and the video fallbacks are unchanged. One hint changed from "glowing spot" to "marked device" because the glow is gone.
+
+### Checks actually run for the UI pass (production preview, Vite 8.3.8)
+
+All browser checks below ran in **headless Chrome via CDP** (`tools/qa-shots.mjs`) against the production preview, plus JS inspection in the in-app Chromium. **Emulated**, not physical devices.
+
+| Check | Command / method | Result |
+|---|---|---|
+| Unit and presentation tests | `npm test` | **27/27 pass** |
+| Production build | `npm run build` | Pass |
+| Fit at every decision, full run (19 measurements per size: open, preview, result for 8 steps + shelter bag + end) | `JOURNEY=1 node tools/qa-shots.mjs <preview> <dir> j` | **1366×768: panel fits at every step, no page or tray scroll. 1920×1080: same.** **375×812:** panel fully visible at every step except Water & Waste preview (7 px over); primary action visible at every step; HUD sticky. Before the pass, 1366×768 tray overflowed by 129 px and the phone page itself scrolled. |
+| Before / after screenshots | default mode, `docs/qa/before-*.png`, `docs/qa/after-*.png` | Heat Valve decision at 1366×768, 1920×1080, 375×812; greenhouse decision at 375×812; plus after-only valve closed (pointer) and result (Warmth 1 → 2 note) shots |
+| Keyboard only (real key events) | `KEYS=1 …` (CDP `Input.dispatchKeyEvent`, reduced motion) | No-purchase run by **Enter only**: lights on → adjust → early shelter → bag → spot → emergency oxygen → standard repair → print → Send Now → **"Signal sent. Waiting for confirmation."** Shift+Tab ×3 reached the marked greenhouse with `:focus-visible` (teal dashed outline); Enter on it opened `lights_on, save_power`, the same choices as the tray shortcut. Screenshot `docs/qa/after-keyboard-hotspot-focus-1366x768.png` |
+| Marked device = shortcut (mouse) | in-app Chromium JS | Clicking the valve hotspot opened `adjust, leave`; active hotspot `tabindex=0`, label "Heat valve. Tap to use it.", no glow filter; greenhouse marked finished |
+| Device tour | `TOUR=1366x768 …`, `TOUR=375x812 REDUCE=1 …` | Every active device (greenhouse, valve, shelter, bag, bag spot, oxygen, recycler, printer, antenna ×2, end) reviewed: ring, pointer and label clear of the crew |
+| Motion vs reduced motion | `MOTION=1 …` | Normal: valve turns to 135° over 600 ms, arrow scales to 0.42, delta note visible, HUD "2 of 2" and Continue ready immediately. Reduced: identical end state at 60 ms, **no running animations**. |
+| Reduced-motion full story | in-app Chromium (system preference already reduce) | Save power → adjust → early → restart → standard → sort → Send Now; repair result ready without timed turns; ending summary lists saved power/restart, early shelter, standard repair, sorting; final line correct |
+| Touch (emulated phone, 375×812, `Input.dispatchTouchEvent`) | `TOUCH=1 …` | Water Training via taps on the recycler hotspot: **kit 3 → 2 in 1 turn; standard 3 → 1 in 2 turns**. Compare ISS Recovery: **14/20 at 70%, 17/20 at 85%** to Further Treatment, NASA NTRS link present, drinking water still 2 after Close |
+
+Known limits: the in-app browser pane was not drawing frames during this session, so its own key presses and transition timings were not used; headless Chrome was used instead. No physical phone was available.
 
 ## Implemented
 
