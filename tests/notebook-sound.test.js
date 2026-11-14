@@ -60,16 +60,35 @@ test('the experiment never changes mission state', async () => {
   resetMembrane();
 });
 
-test('sound starts muted and never throws without Web Audio', () => {
-  assert.equal(soundOn(), false);
-  assert.equal(play('click'), false, 'muted');
+test('sound is on by default and never throws without Web Audio', () => {
+  assert.equal(soundOn(), true, 'new players start with sound on');
   assert.equal(typeof globalThis.AudioContext, 'undefined');
   assert.equal(soundAvailable(), false);
-  assert.doesNotThrow(() => setSound(true));
-  assert.equal(soundOn(), true);
   for (const name of SOUND_NAMES) assert.equal(play(name), false, `${name} is skipped without audio`);
   assert.equal(play('music'), false);
   assert.deepEqual(sfxLog, []);
-  setSound(false);
+  assert.doesNotThrow(() => setSound(false));
+  assert.equal(soundOn(), false);
+  assert.equal(play('click'), false, 'off');
+  setSound(true);
   assert.deepEqual([...SOUND_NAMES].sort(), ['click', 'drop', 'relay', 'valve']);
+});
+
+test('a saved Off choice is respected on the next load, and choices are saved', async () => {
+  const store = new Map([['qamar-square:sound-effects', 'off']]);
+  globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)) };
+  try {
+    const fresh = await import('../src/ui/sound.js?reload=saved-off');
+    assert.equal(fresh.soundOn(), false, 'refresh keeps Off');
+    fresh.setSound(true);
+    assert.equal(store.get('qamar-square:sound-effects'), 'on');
+    fresh.setSound(false);
+    assert.equal(store.get('qamar-square:sound-effects'), 'off');
+    globalThis.localStorage = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
+    const blocked = await import('../src/ui/sound.js?reload=blocked');
+    assert.equal(blocked.soundOn(), true, 'blocked storage falls back to the default');
+    assert.doesNotThrow(() => blocked.setSound(false));
+  } finally {
+    delete globalThis.localStorage;
+  }
 });

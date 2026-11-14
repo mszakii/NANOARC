@@ -364,14 +364,21 @@ async function audioRun() {
   await send('Page.navigate', { url: base });
   await sleep(1200);
   const log = () => evaluate(`JSON.stringify(globalThis.__qsSfx)`);
-  const label = () => evaluate(`document.querySelector('[data-action="sound"]').textContent.trim() + ' (aria-pressed=' + document.querySelector('[data-action="sound"]').getAttribute('aria-pressed') + ')'`);
+  const label = () => evaluate(`(() => { document.querySelector('#tools-body').innerHTML ||= ''; const b = [...document.querySelectorAll('[data-action="sound"]')][0]; return b ? b.textContent.trim() + ' (aria-pressed=' + b.getAttribute('aria-pressed') + ')' : '(Menu: ' + (globalThis.__qsSfxState ? 'see menu' : '') + ')'; })()`);
   const out = [];
-  out.push('initial: ' + (await label()));
+  // Desktop: the Sound button is in the tray header. Phones: it lives in the Menu dialog.
+  const toggleSound = async () => {
+    if (!phone) return clickReal('[data-action="sound"]');
+    await clickReal('[data-action="tools"]');
+    await clickReal('#tools-body [data-action="sound"]');
+    await clickReal('[data-action="tools-close"]');
+  };
+  await evaluate(`localStorage.clear(); location.reload(); true`);
+  await sleep(1200);
+  out.push('new player: ' + (await label()) + ', engine before any gesture: ' + (await evaluate(`globalThis.__qsSfxState()`)));
   await clickReal('[data-action="start"]');
-  out.push('muted Start click logged: ' + (await log()));
-  await clickReal('[data-action="sound"]');
   await sleep(300);
-  out.push('after toggle: ' + (await label()) + ' log ' + (await log()) + ' audio engine ' + (await evaluate(`globalThis.__qsSfxState()`)));
+  out.push('first gesture (Start Mission): log ' + (await log()) + ', engine ' + (await evaluate(`globalThis.__qsSfxState()`)));
   await clickReal('[data-action="launch"]');
   await clickReal('[data-action="open"]');
   await clickReal('[data-action="select"][data-id="save_power"]');
@@ -419,11 +426,19 @@ async function audioRun() {
   await clickReal('[data-action="confirm"]');
   out.push('Send Now: ' + (await log()));
   out.push('audio context: ' + (await evaluate(`typeof AudioContext`)));
-  await clickReal('[data-action="sound"]');
+  await toggleSound();
   await evaluate(`globalThis.__qsSfx.length = 0; true`);
   await clickReal('[data-action="continue"]');
   out.push('muted again: ' + (await label()) + ', Continue logged ' + (await log()) + ', engine ' + (await evaluate(`globalThis.__qsSfxState()`)));
   out.push('final: ' + (await evaluate(`document.querySelector('.final-line')?.textContent.trim()`)));
+  // Refresh respects the saved Off choice; the first gesture then plays nothing.
+  await send('Page.reload', {});
+  await sleep(1200);
+  await evaluate(`globalThis.__qsSfx.length = 0; true`);
+  out.push('after refresh: ' + (await label()) + ', saved ' + (await evaluate(`localStorage.getItem('qamar-square:sound-effects')`)));
+  await clickReal('[data-action="start"]');
+  out.push('Start Mission with saved Off: log ' + (await log()) + ', engine ' + (await evaluate(`globalThis.__qsSfxState()`)));
+  await evaluate(`localStorage.clear(); true`);
   console.log(out.join(String.fromCharCode(10)));
 }
 

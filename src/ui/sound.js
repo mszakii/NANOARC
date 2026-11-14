@@ -1,15 +1,35 @@
 // Qamar Square sound effects. Short, non-musical, synthesized with Web Audio: no files, no music,
-// no melodies, no loops. Starts muted. Every sound repeats a result that is already on screen,
-// so the game is complete with sound off. If audio is unavailable, play() quietly does nothing.
+// no melodies, no loops. On by default for new players (quiet level); the player's On/Off choice is
+// saved in this browser. Every sound repeats a result that is already on screen, so the game is
+// complete with sound off. If audio is unavailable, play() quietly does nothing.
 
-let enabled = false;
+const STORE_KEY = 'qamar-square:sound-effects';
+
+/** Saved choice, if any: 'on' | 'off' | null. Storage can be missing or blocked; that is fine. */
+function savedChoice() {
+  try {
+    return globalThis.localStorage?.getItem(STORE_KEY) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function saveChoice(on) {
+  try {
+    globalThis.localStorage?.setItem(STORE_KEY, on ? 'on' : 'off');
+  } catch {
+    // Private mode or blocked storage: the choice lasts for this page only.
+  }
+}
+
+let enabled = savedChoice() !== 'off';
 let ctx = null;
 let master = null;
 let noise = null;
 let broken = false;
 const lastPlayed = new Map();
 const MIN_GAP_MS = 90; // the same sound cannot fire twice within this window
-const MASTER_GAIN = 0.9;
+const MASTER_GAIN = 0.7; // quiet by default: peaks about -8 to -17 dBFS
 
 /** Names of sounds actually started, for QA (duplicate-sound checks). Capped. */
 export const sfxLog = [];
@@ -141,6 +161,7 @@ export function soundAvailable() {
 /** Turn sound effects on or off. Call from a user gesture so the browser allows audio. */
 export function setSound(on) {
   enabled = Boolean(on);
+  saveChoice(enabled);
   if (enabled) {
     const c = audio();
     if (c?.state === 'suspended') c.resume().catch(() => {});
@@ -148,6 +169,16 @@ export function setSound(on) {
     ctx.suspend().catch(() => {});
   }
   return enabled;
+}
+
+/**
+ * Start or resume audio from a user gesture (tap, click or key press) when sound is on.
+ * Browsers only allow audio to start inside such a gesture. Safe to call often.
+ */
+export function primeSound() {
+  if (!enabled) return;
+  const c = audio();
+  if (c?.state === 'suspended') c.resume().catch(() => {});
 }
 
 /**

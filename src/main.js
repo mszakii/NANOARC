@@ -12,7 +12,7 @@ import { renderPanel } from './ui/panel.js';
 import { renderStart, renderLoadout, renderEnd } from './ui/screens.js';
 import { openScience } from './ui/science.js';
 import { icon } from './ui/icons.js';
-import { play, setSound, soundOn, soundAvailable } from './ui/sound.js';
+import { play, setSound, soundOn, soundAvailable, primeSound } from './ui/sound.js';
 
 const TURN_MS = 900;
 const STEP_ORDER = ['greenhouse', 'valve', 'shelter', 'oxygen', 'repair', 'plastic', 'signal', 'antenna', 'done'];
@@ -423,6 +423,11 @@ restartDialog.addEventListener('close', () => {
   if (document.activeElement && document.activeElement !== document.body) return;
   (tray.querySelector('[data-action="restart-ask"]') ?? tray.querySelector('[data-primary]'))?.focus();
 });
+
+// Sound is on by default: start Web Audio on the first eligible gesture (for example Start Mission).
+for (const type of ['pointerdown', 'keydown']) {
+  document.addEventListener(type, () => primeSound(), { capture: true, passive: true });
+}
 
 app.addEventListener('click', (event) => {
   const el = event.target instanceof Element ? event.target.closest('[data-action]') : null;
