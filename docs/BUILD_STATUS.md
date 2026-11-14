@@ -1,9 +1,9 @@
 # Qamar Square — Build status
 
 **Updated:** 14 November 2026 (Africa/Cairo).
-**Milestone:** integration implemented; reduced-motion runtime and final production game flows verified. Follow-up portrait/touch checks are in progress.
-**Current QA baseline:** `e51c098`. Working tree was clean at the start of the follow-up. All commits remain local.
-**Starting revision:** `8396e18` (following `be806fa`). The scene, scene CSS, ten crew WebPs, crop script and scene preview were already committed in `8396e18`. The working tree was clean before integration. No previous work was discarded. This status ships in the local integration commit; nothing was pushed.
+**Milestone:** approved implementation and all checks available in this environment complete. Reduced motion, final production flows, portrait layout and emulated touch passed. Physical-phone checks are Ahmed's remaining manual check.
+**Current QA baseline:** follow-up began clean at `e51c098`. Final production code is `8b4fa53`; the subsequent verification/checklist commit changes documentation only. All commits remain local.
+**Integration history:** the scene, scene CSS, ten crew WebPs, crop script and scene preview were already committed in `8396e18` (following `be806fa`). Integration was committed as `e51c098`. No previous work was discarded; nothing was pushed during this follow-up.
 
 ## Implemented
 
@@ -29,6 +29,18 @@
 - ISS comparison on production story and practice: 20 total drops, 14/17 recovered, NASA historical-report link present, full HUD unchanged after closing, focus returned to Compare ISS Recovery. No captured error/warning logs in the in-app browser at the story-ending checkpoint.
 - Screenshot and computed-style evidence saved outside Git under the chat's `qamar-square-qa` artifact folder.
 
+### Follow-up batch 2 — portrait and emulated touch (14 November 2026)
+
+- Recovered the native game window by docking its existing DevTools back into it. No native input guard was bypassed. Enabled DevTools device toolbar at **375×812**, explicitly displayed device type **Mobile**, and used native coordinate taps and drags inside that emulated viewport. This is **emulated touch**, not a physical phone and not merely a resized pointer viewport. DevTools preview zoom was 50%; CSS viewport dimensions remained 375×812.
+- Touch Start → no-purchase Launch → greenhouse hotspot → lights preview **4 → 2 power** → Confirm → result **2 power** → Continue all worked. Heat-valve hotspot → Leave It As Is → Confirm showed warmth 0 and friendly recovery; touch Retry restored warmth 1 and power 2.
+- Touch Water Training → Repair Kit → recycler hotspot → swipe tray → kit preview **3 → 2** → Confirm produced **1 turn / 2 bottles**. Try Both Repair Paths → Standard Tools reset to **3 bottles**; touch Standard Repair → Confirm produced **2 turns / 1 bottle**.
+- Touch Compare ISS Recovery showed **14 of 20**; tapping historical 85% changed it to **17 of 20**. Swiping the dialog revealed sources and Close; touch Close returned to the repair result with the same **2 drinking-water bottles**. Normal tray and dialog scrolling both worked.
+- On the final production build in in-app Chromium, **360×800** gave document scroll width **360 px**, with no rendered buttons under 44×44 px at the first decision. At **375×812**, document width was **375 px**; the ISS dialog was about **337 px** wide with 317 px scroll width and no buttons under 44×44 px. Reviewed both layouts visually. These geometry checks are viewport/pointer checks separate from the native Chrome touch emulation above.
+- Native Chrome reload displayed the new crescent favicon and no resource error; the earlier favicon 404 was gone. The only remaining native-console entry was Chrome's informational autofocus notice, not an application exception.
+- Closed the task-created Chrome Guest window, which also removed its DevTools media/device overrides. Reset the in-app viewport override and left the production preview on Start. Existing user browser windows were left alone.
+- No physical device was accessible. Exact hardware steps and expected results are in `docs/MANUAL_CHECKS.md`. No implementation blockers remain. Phone camera zoom is cut under `specs/plan.md` §7; tray shortcuts remain available. Videos, Knowledge Meals, sound and deployment remain deferred.
+- Documentation-only batch: relevant checks are the completed browser matrix above and `git diff --check`; production code is identical to the batch-1 build that passed **27/27 tests** and `npm run build`.
+
 ### Automated
 
 - `npm test`: **27/27 passing** (24 existing rule tests plus 3 presentation integration tests).
@@ -37,7 +49,7 @@
 - Crew assets: ten existing WebPs total 176,640 bytes (under 400 KB).
 - NASA historical source checked at <https://ntrs.nasa.gov/citations/20110023178>: initial 85% urine recovery, gypsum failure and reduction to 70%. No current total-station recovery rate is implied.
 
-### Browser checks — automated browser, not physical devices
+### Baseline browser checks recorded in e51c098 — not physical devices
 
 Used in-app Chromium. Development: `http://127.0.0.1:5173/`; production preview: `http://127.0.0.1:4173/`.
 
@@ -60,13 +72,11 @@ Used in-app Chromium. Development: `http://127.0.0.1:5173/`; production preview:
 
 None performed. No physical phone or hardware touch testing is claimed. Laptop keyboard interactions above were automation-generated browser key events.
 
-## Remaining verification gaps
+## Remaining manual checks and deferred work
 
-Computer Use refused to bind the native Brave window because it could not determine the current browser URL confidently enough to enforce policy. Computer Use was then stopped for the turn. The in-app viewport capability supports resizing but does not expose touch or reduced-motion emulation. No alternate browser automation mechanism was used to bypass that stop.
-
-1. **Real touch / phone:** run the preview on the LAN using the command below, then verify device taps, preview/confirm, heat recovery/retry, both training paths and ISS controls on a physical phone. A 360 px viewport and other browser engines also remain unchecked in this session.
-2. **Reduced motion runtime:** now passed in follow-up batch 1 above. A physical phone's system preference remains part of the hardware checklist, not an implementation blocker.
-3. **Optional toy polish:** the existing scene uses a full-base phone view plus tray shortcuts; a zooming phone camera was not added. Sound, video, Knowledge Meals and deployment remain outside this integration.
+- **Physical phone and its browser/system preference:** no hardware was available. See `docs/MANUAL_CHECKS.md` for exact story, training, science, portrait and Reduce Motion steps. Browser emulation does not establish Safari or hardware-touch compatibility.
+- **Available environment checks:** complete. The earlier native Brave access limitation from the baseline session was resolved for this follow-up by using an isolated Chrome Guest window; there is no remaining browser-automation blocker for the completed checks.
+- **Deferred:** video, Knowledge Meals, sound, deployment, and optional phone camera zoom. Existing intro/notebook text fallbacks remain. Frozen game and scene contracts, budget and resource rules are unchanged.
 
 ## Run
 
@@ -77,12 +87,12 @@ npm run build
 npm run preview -- --host 127.0.0.1 --port 4173 --strictPort
 ```
 
-For a physical phone on the same trusted LAN, stop the localhost preview first if it occupies port 4173, then run:
+For a physical phone on the same trusted LAN, use a separate port so the existing localhost preview can stay running:
 
 ```powershell
-npm run preview -- --host 0.0.0.0 --port 4173 --strictPort
+npm run preview -- --host 0.0.0.0 --port 4174 --strictPort
 ```
 
-Open `http://<computer-LAN-IP>:4173/` on the phone. The localhost preview was used during this session; LAN exposure was not enabled.
+Open `http://<computer-LAN-IP>:4174/` on the phone. The localhost preview was used during this session; LAN exposure was not enabled. See `docs/MANUAL_CHECKS.md` for the exact checklist.
 
 See `docs/DEMO.md` for the short judging route. Optional clips can later go in `public/assets/video/` with English `.vtt` captions; gameplay already works without them.

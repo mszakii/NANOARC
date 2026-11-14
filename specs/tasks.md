@@ -3,7 +3,7 @@
 Only the lead edits this file. Lanes report back; the lead ticks the box.
 Status: `[ ]` open · `[~]` in progress · `[x]` done · `[-]` cut.
 
-Integration update (14 November 2026): T2/T4/T5/T6 implemented and checked. T7/T8 remain partial because physical touch and reduced-motion browser checks could not be completed after Computer Use stopped. Laptop 1366×768 keyboard and 375×812 pointer/viewport checks passed. Phone camera zoom remains optional. See `docs/BUILD_STATUS.md` for the actual check matrix and `docs/DEMO.md` for the demo route.
+Final QA update (14 November 2026): T2–T8 are complete for this environment. Reduced-motion production runtime, laptop keyboard, 360/375 px portrait layouts and Chrome DevTools Mobile touch emulation passed. Phone camera zoom is cut under `specs/plan.md` §7; tray shortcuts remain. Physical-phone checks are recorded separately in `docs/MANUAL_CHECKS.md`, with actual results in `docs/BUILD_STATUS.md`. See `docs/DEMO.md` for the demo route.
 
 Lanes and their files are in `specs/plan.md` §4. The contract is in §5.
 
@@ -32,12 +32,12 @@ Lanes and their files are in `specs/plan.md` §4. The contract is in §5.
   **Done when:** QS-04 passes; focus returns to the tray on close.
 - [x] **T6 · Lane C · Water Training.** Entry on the start screen, "Try Both Repair Paths" from the fixed 3-bottle checkpoint.
   **Done when:** QS-03 passes in the browser; story state untouched.
-- [~] **T7 · Lane B · Toy feel.** Crew expressions per phase, device wiggle, sunrise relight, free-play bounces, phone camera zoom, reduced-motion pass.
+- [x] **T7 · Lane B · Toy feel.** Crew expressions per phase, device wiggle, sunrise relight, free-play bounces, reduced-motion pass. Phone camera zoom cut under §7; full-base view and tray shortcuts retained.
   **Done when:** reviewed at 375×812 and 1366×768.
 
 ## Phase 4 — 2:35–3:00
 
-- [~] **T8 · Lead · Freeze and verify.** `npm test`, `npm run build`, `npm run preview`, QS matrix on laptop + phone viewport + keyboard-only, `README.md`, `docs/BUILD_STATUS.md`, 90-second demo script, final commit.
+- [x] **T8 · Lead · Freeze and verify.** `npm test`, `npm run build`, `npm run preview`, QS matrix on laptop + phone viewport + keyboard-only, `README.md`, `docs/BUILD_STATUS.md`, 90-second demo script, final commit. Physical-phone checklist supplied separately.
   **Gate 2:** production build verified.
 
 ## Stretch (only if T8 is green early)

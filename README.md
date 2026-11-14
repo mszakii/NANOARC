@@ -32,7 +32,7 @@ npm run preview
 
 The start screen also offers **Water Training**: try standard tools and the repair kit from the same 3-bottle checkpoint. **Compare ISS Recovery** opens a historical 20-drop illustration without changing mission supplies. The ending summarises the decisions made in that run and leaves signal confirmation pending.
 
-See `docs/BUILD_STATUS.md` for checks actually completed and remaining physical-touch/reduced-motion verification, and `docs/DEMO.md` for a short judging route. Videos are optional; the intro and notebook have text fallbacks.
+See `docs/BUILD_STATUS.md` for completed checks, `docs/MANUAL_CHECKS.md` for the remaining physical-phone checklist, and `docs/DEMO.md` for a short judging route. Reduced-motion runtime and emulated touch have passed. Videos are optional; the intro and notebook have text fallbacks.
 
 ## How the project is organised
 
