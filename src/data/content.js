@@ -104,13 +104,13 @@ export const UI = {
 
 /** HUD counters. `key` matches `state.res`. */
 export const RES = {
-  power: { label: 'Power', icon: '🔋', one: 'power unit', many: 'power units' },
-  water: { label: 'Drinking Water', icon: '💧', one: 'bottle', many: 'bottles' },
-  meals: { label: 'Crew Meals', icon: '🍱', one: 'meal', many: 'meals' },
-  readyMeals: { label: 'Ready-to-Eat Meal', icon: '🥡', one: 'ready meal', many: 'ready meals' },
-  warmth: { label: 'Warmth', icon: '🌡️', of: 2 },
-  oxygen: { label: 'Cabin Oxygen', icon: '💨' },
-  reserve: { label: 'Emergency Reserve', icon: '🆘' },
+  power: { label: 'Power', short: 'Power', icon: 'power', one: 'power unit', many: 'power units' },
+  water: { label: 'Drinking Water', short: 'Water', icon: 'water', one: 'bottle', many: 'bottles' },
+  meals: { label: 'Crew Meals', short: 'Meals', icon: 'meals', one: 'meal', many: 'meals' },
+  readyMeals: { label: 'Ready-to-Eat Meal', icon: 'readyMeal', one: 'ready meal', many: 'ready meals' },
+  warmth: { label: 'Warmth', short: 'Warmth', icon: 'warmth', of: 2 },
+  oxygen: { label: 'Cabin Oxygen', short: 'Oxygen', icon: 'oxygen' },
+  reserve: { label: 'Emergency Reserve', short: 'Reserve', icon: 'reserve' },
 };
 
 export const HUD = {
@@ -119,29 +119,30 @@ export const HUD = {
   of: 'of',
   readyNote: (n) => `${n} ready-to-eat`,
   generator: 'Generator Status',
-  generatorIcon: '⚙️',
+  generatorShort: 'Generator',
+  generatorIcon: 'generator',
   running: 'Running',
   stopped: 'Stopped',
-  runningMark: '▶',
-  stoppedMark: '■',
+  runningMark: 'play',
+  stoppedMark: 'stop',
 };
 
 export const ITEMS_COPY = {
   battery: {
     name: 'Spare Battery',
-    icon: '🔋',
+    icon: 'power',
     does: 'Adds 3 power units at launch.',
     when: 'Helps when lights and machines need power.',
   },
   kit: {
     name: 'Water Repair Kit',
-    icon: '🧰',
+    icon: 'kit',
     does: 'Fixes the water recycler in 1 turn, not 2.',
     when: 'Helps in the water crisis. It saves 1 bottle.',
   },
   mealPack: {
     name: 'Extra Crew Meal Pack',
-    icon: '🥡',
+    icon: 'readyMeal',
     does: 'Adds 1 ready-to-eat meal.',
     when: 'Helps if the crew must eat fast in the shelter.',
   },
@@ -162,8 +163,8 @@ export const STEPS = {
     science: 'plants',
     say: (s) => `The Moon night is long. The greenhouse lights use power. You have ${plural(s.res.power, 'power unit', 'power units')}.`,
     options: {
-      lights_on: { label: 'Keep Greenhouse Lights On', icon: '💡', hint: 'The plants keep growing.' },
-      save_power: { label: 'Save Power', icon: '🌙', hint: 'The lights go off. The plants wait.' },
+      lights_on: { label: 'Keep Greenhouse Lights On', icon: 'lamp', hint: 'The plants keep growing.' },
+      save_power: { label: 'Save Power', icon: 'moon', hint: 'The lights go off. The plants wait.' },
     },
   },
   valve: {
@@ -175,8 +176,8 @@ export const STEPS = {
     science: 'heat',
     say: () => 'Brr! Heat is leaking out of the cabin. The heat valve can slow the leak.',
     options: {
-      adjust: { label: 'Adjust Heat Control Valve', icon: '🔧', hint: 'Less heat leaks out.' },
-      leave: { label: 'Leave It As Is', icon: '❄️', hint: 'The heat keeps leaking out.' },
+      adjust: { label: 'Adjust Heat Control Valve', icon: 'wrench', hint: 'Less heat leaks out.' },
+      leave: { label: 'Leave It As Is', icon: 'cold', hint: 'The heat keeps leaking out.' },
     },
   },
   shelter: {
@@ -188,8 +189,8 @@ export const STEPS = {
     science: 'shelter',
     say: () => 'The Sun may send fast particles. The crew needs a shelter made of supply bags.',
     options: {
-      early: { label: 'Prepare Shelter Early', icon: '⛺', hint: 'Work lights use power. The crew eats a meal after.' },
-      at_alert: { label: 'Prepare at the Alert', icon: '🚨', hint: 'You keep your power. The crew eats in a hurry.' },
+      early: { label: 'Prepare Shelter Early', icon: 'shelter', hint: 'Work lights use power. The crew eats a meal after.' },
+      at_alert: { label: 'Prepare at the Alert', icon: 'alert', hint: 'You keep your power. The crew eats in a hurry.' },
     },
   },
   oxygen: {
@@ -201,8 +202,8 @@ export const STEPS = {
     science: 'oxygen',
     say: (s) => `The oxygen generator has stopped. The crew needs air. You have ${plural(s.res.power, 'power unit', 'power units')}.`,
     options: {
-      restart: { label: 'Restart Generator', icon: '⚙️', hint: 'The generator makes new oxygen. You keep the reserve.' },
-      reserve: { label: 'Use Emergency Oxygen', icon: '🆘', hint: 'The reserve tank is used up. You keep your power.' },
+      restart: { label: 'Restart Generator', icon: 'generator', hint: 'The generator makes new oxygen. You keep the reserve.' },
+      reserve: { label: 'Use Emergency Oxygen', icon: 'reserve', hint: 'The reserve tank is used up. You keep your power.' },
     },
   },
   repair: {
@@ -217,8 +218,8 @@ export const STEPS = {
         ? `Training time! The water recycler is broken. You have ${plural(s.res.water, 'bottle', 'bottles')}. Each repair turn uses 1 bottle.`
         : `The crew drank 1 bottle. Now the water recycler is broken. You have ${plural(s.res.water, 'bottle', 'bottles')}. Each repair turn uses 1 bottle.`,
     options: {
-      standard: { label: 'Standard Repair', icon: '🔧', hint: 'A slow fix with the normal tools.' },
-      kit: { label: 'Use Repair Kit', icon: '🧰', hint: 'A fast fix with the kit you packed.' },
+      standard: { label: 'Standard Repair', icon: 'wrench', hint: 'A slow fix with the normal tools.' },
+      kit: { label: 'Use Repair Kit', icon: 'kit', hint: 'A fast fix with the kit you packed.' },
     },
   },
   plastic: {
@@ -230,8 +231,8 @@ export const STEPS = {
     science: 'plastic',
     say: () => 'There is used plastic in the bin. The 3D printer can turn it into a cable clip.',
     options: {
-      print: { label: 'Print Cable Clip', icon: '🖨️', hint: 'The clip holds the antenna cable. The crew eats a meal after.' },
-      sort: { label: 'Sort and Store Plastic', icon: '♻️', hint: 'You keep your power. The crew eats a meal after.' },
+      print: { label: 'Print Cable Clip', icon: 'printer', hint: 'The clip holds the antenna cable. The crew eats a meal after.' },
+      sort: { label: 'Sort and Store Plastic', icon: 'recycle', hint: 'You keep your power. The crew eats a meal after.' },
     },
   },
   signal: {
@@ -243,8 +244,8 @@ export const STEPS = {
     science: 'signal',
     say: () => 'Sunrise! The solar panels are charging. It is time to send a signal to Earth.',
     options: {
-      send_now: { label: 'Send Now', icon: '📡', hint: 'The signal goes out right away.' },
-      check_antenna: { label: 'Check Antenna First', icon: '🔍', hint: 'The crew looks at the antenna and its cable.' },
+      send_now: { label: 'Send Now', icon: 'antenna', hint: 'The signal goes out right away.' },
+      check_antenna: { label: 'Check Antenna First', icon: 'search', hint: 'The crew looks at the antenna and its cable.' },
     },
   },
   antenna: {
@@ -260,8 +261,8 @@ export const STEPS = {
       return 'The antenna cable is loose. The crew can secure it.';
     },
     options: {
-      secure_cable: { label: 'Secure Cable', icon: '🔗', hint: 'The crew ties the cable down.' },
-      send: { label: 'Send Signal', icon: '📡', hint: 'The signal goes out to Earth.' },
+      secure_cable: { label: 'Secure Cable', icon: 'cable', hint: 'The crew ties the cable down.' },
+      send: { label: 'Send Signal', icon: 'antenna', hint: 'The signal goes out to Earth.' },
     },
   },
 };

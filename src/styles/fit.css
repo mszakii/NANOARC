@@ -1,0 +1,642 @@
+/* Qamar Square fit pass: local icons, compact HUD, fixed decision foot, crew-line motion.
+   Loaded after ui.css. A standard decision fits 1366x768, 1920x1080 and 375x812
+   without scrolling. Short or zoomed screens still scroll the tray, so nothing is lost. */
+
+/* ---------- Icons ---------- */
+.ico {
+  display: inline-block;
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.25em;
+  color: var(--ink);
+  overflow: visible;
+
+  & .a { fill: var(--ico-a, var(--sun)); }
+  & .b { fill: var(--ico-b, var(--coral)); }
+}
+
+.ico[data-icon='water'],
+.ico[data-icon='drop'] { --ico-a: var(--sky-blue); }
+.ico[data-icon='meals'],
+.ico[data-icon='check'] { --ico-a: #8fd18a; }
+.ico[data-icon='readyMeal'],
+.ico[data-icon='warmth'],
+.ico[data-icon='reserve'],
+.ico[data-icon='kit'],
+.ico[data-icon='pin'] { --ico-a: var(--coral); }
+.ico[data-icon='oxygen'],
+.ico[data-icon='shelter'],
+.ico[data-icon='wrench'],
+.ico[data-icon='search'],
+.ico[data-icon='science'],
+.ico[data-icon='info'],
+.ico[data-icon='generator'],
+.ico[data-icon='notebook'] { --ico-a: var(--teal-soft); }
+.ico[data-icon='alert'],
+.ico[data-icon='lock'] { --ico-a: var(--warn-bg); }
+.ico[data-icon='antenna'],
+.ico[data-icon='rocket'] { --ico-a: var(--room); }
+.ico[data-icon='cold'] { color: #2f6fae; }
+.ico[data-icon='recycle'] { color: var(--teal); }
+.ico[data-icon='play'] { --ico-a: var(--teal); }
+.ico[data-icon='stop'] { --ico-a: var(--coral); }
+
+.final-line .ico { color: var(--room); --ico-a: var(--teal); }
+.btn-primary .ico[data-icon='check'] { --ico-a: var(--card); }
+
+/* ---------- Tray frame ---------- */
+.game {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 460px);
+}
+
+.tray-body {
+  gap: 8px;
+  padding: 10px;
+}
+
+.tray-top .brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text);
+  color: var(--ink-soft);
+}
+
+/* The panel fills the rest of the tray; its foot sits at the bottom. */
+.tray-body > .panel {
+  flex: 1 0 auto;
+}
+
+/* ---------- HUD (compact) ---------- */
+.hud {
+  gap: 5px;
+  margin: -4px -2px 0;
+  padding: 4px 2px 2px;
+}
+
+.ctr {
+  gap: 1px 5px;
+  padding: 4px 6px;
+}
+
+.ctr-ico {
+  display: grid;
+  font-size: 20px;
+}
+
+.ctr-val {
+  font-size: 17px;
+}
+
+.ctr-label {
+  font-size: 11.5px;
+}
+
+.pips {
+  min-height: 10px;
+  margin-top: 1px;
+}
+
+.pip {
+  height: 10px;
+}
+
+.ctr-gen .ctr-val-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ico-mark {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.lbl-short {
+  display: none;
+}
+
+@media (max-width: 760px), (orientation: portrait) {
+  .lbl-short {
+    display: inline;
+  }
+}
+
+/* ---------- Panel ---------- */
+.panel {
+  gap: 10px;
+  padding: 12px;
+}
+
+.panel-head {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panel-name {
+  min-width: 0;
+
+  & .eyebrow {
+    font-size: 12.5px;
+  }
+
+  & .card-title {
+    font-size: 22px;
+  }
+}
+
+.btn-science {
+  flex: none;
+  max-width: 52%;
+  padding-inline: 10px;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.panel-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Status slot above the primary action. A fixed minimum height keeps the
+   button in place while the player compares choices. */
+.slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 62px;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.slot-hint {
+  border: 2px dashed var(--line);
+  color: var(--ink-soft);
+  font-size: 14px;
+  text-align: center;
+}
+
+.preview {
+  border: 2px dashed var(--teal);
+  background: var(--teal-soft);
+}
+
+/* The dashed teal box and the arrows already say "preview"; keep the title for screen readers. */
+.preview-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.preview {
+  position: relative;
+}
+
+/* A locked choice already shows a lock icon and its reason; the extra word only wraps the line. */
+.opt[aria-disabled='true'] .opt-mark {
+  display: none;
+}
+
+.preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 2px 0 0;
+  font-size: 17px;
+
+  & li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+}
+
+.preview-hint {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.3;
+}
+
+.extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  & .btn {
+    flex: 1 1 140px;
+  }
+}
+
+/* ---------- Crew line ---------- */
+.talk {
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.portrait {
+  width: 52px;
+  height: 52px;
+  box-shadow: none;
+}
+
+/* Relief hop after a good result, a small shiver in a crisis. Plays once per render. */
+.talk[data-mood='happy'] .portrait {
+  animation: qs-hop 520ms var(--bounce) 1;
+}
+
+.talk[data-mood='worried'] .portrait {
+  animation: qs-shiver 420ms ease-in-out 1;
+}
+
+.bubble {
+  margin: 0;
+  padding: 7px 11px;
+  font-size: 15.5px;
+  line-height: 1.35;
+}
+
+.who {
+  display: inline;
+  margin-right: 2px;
+  font-size: 13px;
+}
+
+/* ---------- Choices ---------- */
+.opts {
+  gap: 8px;
+}
+
+.opt {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 10px;
+  min-height: 60px;
+  padding: 8px 12px;
+}
+
+.opt-ico {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--card);
+  font-size: 26px;
+}
+
+.opt[aria-pressed='true'] .opt-ico {
+  background: var(--room);
+}
+
+.opt-label {
+  font-size: 17px;
+}
+
+.opt-mark {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.opt-why {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13.5px;
+  line-height: 1.3;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 8px 1px 6px;
+}
+
+.result p,
+.recovery p,
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.result .ico,
+.recovery .ico,
+.note .ico {
+  margin-top: 0.1em;
+}
+
+.task-steps li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.turn-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Start, loadout, end, dialogs ---------- */
+.hero-moon .ico {
+  width: 64px;
+  height: 64px;
+}
+
+.item-ico {
+  display: grid;
+  place-items: center;
+}
+
+.item-state,
+.budget-msg,
+.card-title,
+.eyebrow,
+.final-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.final-line {
+  justify-content: center;
+}
+
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.links .ico {
+  width: 1em;
+  height: 1em;
+  color: var(--teal);
+}
+
+.teaching {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.iss-drop .ico {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Portrait phones ---------- */
+@media (max-width: 760px), (orientation: portrait) {
+  .game {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stage {
+    max-height: 31dvh;
+  }
+
+  .tray-body {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  /* Restart floats over the top-right of the scene so the tray keeps its height. */
+  .tray-top {
+    position: absolute;
+    inset: 12px 12px auto auto;
+    z-index: 3;
+
+    & .brand {
+      display: none;
+    }
+
+    & .btn {
+      min-height: var(--tap);
+      padding: 4px 10px;
+      border-color: var(--line);
+      background: rgb(255 245 229 / 0.94);
+      font-size: 13px;
+    }
+  }
+
+  .hud {
+    gap: 4px;
+  }
+
+  .ctr {
+    padding: 3px 5px;
+  }
+
+  /* Short visible label; the full label stays in the accessibility tree. */
+  .lbl-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ctr-label {
+    white-space: nowrap;
+  }
+
+  .ctr-note {
+    display: none;
+  }
+
+  .ctr-gen {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  .ctr-gen .ctr-label {
+    grid-column: 3;
+    grid-row: 1;
+    padding-left: 2px;
+  }
+
+  /* Picked: keep the check icon and border, drop the word to save a line. */
+  .opt-mark > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .opt-mark .ico {
+    width: 22px;
+    height: 22px;
+  }
+
+  .tray-body {
+    gap: 5px;
+    padding: 7px;
+  }
+
+  .panel-main {
+    gap: 8px;
+  }
+
+  .panel-name .eyebrow {
+    font-size: 11.5px;
+  }
+
+
+
+  .ctr-ico {
+    font-size: 17px;
+  }
+
+  .ctr-val {
+    font-size: 15px;
+    line-height: 1.05;
+  }
+
+  .ctr-label {
+    font-size: 11px;
+    line-height: 1.1;
+  }
+
+  .chips {
+    gap: 3px;
+  }
+
+  .chip {
+    padding: 0 6px 0 4px;
+    font-size: 12px;
+  }
+
+  .opt-body {
+    gap: 2px;
+  }
+
+  .preview-list {
+    font-size: 15.5px;
+  }
+
+  .preview-hint {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .pips {
+    display: none;
+  }
+
+  .panel {
+    gap: 6px;
+    padding: 9px;
+  }
+
+  .panel-name .card-title {
+    font-size: 19px;
+  }
+
+  .btn-science {
+    font-size: 13px;
+  }
+
+  .talk {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .portrait {
+    width: 44px;
+    height: 44px;
+  }
+
+  .bubble {
+    padding: 5px 9px;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .opt {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    min-height: 56px;
+    padding: 6px 10px;
+  }
+
+  .opt-ico {
+    width: 34px;
+    height: 34px;
+    font-size: 22px;
+  }
+
+  .opt-label {
+    font-size: 16px;
+  }
+
+  .slot {
+    min-height: 50px;
+    padding: 4px 10px;
+  }
+
+  .slot-hint {
+    min-height: 40px;
+    font-size: 13px;
+  }
+
+  .extras .btn {
+    min-height: var(--tap);
+    padding-block: 4px;
+  }
+
+  .btn-big {
+    min-height: 52px;
+  }
+}
+
+@keyframes qs-hop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px) rotate(-4deg); }
+}
+
+@keyframes qs-shiver {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .talk .portrait {
+    animation: none;
+  }
+}
+
+/* Tall screens: keep the foot right under the choices instead of far below. */
+@media (min-height: 900px) and (min-width: 761px) and (orientation: landscape) {
+  .tray-body > .panel {
+    flex: 0 0 auto;
+  }
+
+  .panel-foot {
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 760px), (orientation: portrait) {
+  .ctr-gen .ctr-val-text {
+    font-size: 13px;
+  }
+}

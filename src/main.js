@@ -3,6 +3,7 @@
 import './styles/tokens.css';
 import './styles/scene.css';
 import './styles/ui.css';
+import './styles/fit.css';
 import * as rules from './game/rules.js';
 import { mountScene, updateScene, DEVICE_FOR_STEP } from './ui/scene.js';
 import { UI } from './data/content.js';
@@ -10,6 +11,7 @@ import { esc, renderHud } from './ui/hud.js';
 import { renderPanel } from './ui/panel.js';
 import { renderStart, renderLoadout, renderEnd } from './ui/screens.js';
 import { openScience } from './ui/science.js';
+import { icon } from './ui/icons.js';
 
 const TURN_MS = 900;
 const STEP_ORDER = ['greenhouse', 'valve', 'shelter', 'oxygen', 'repair', 'plastic', 'signal', 'antenna', 'done'];
@@ -255,8 +257,8 @@ function playHtml() {
   if (state.step === 'oxygen') keys.push('generator', 'oxygen');
   return `
     <header class="tray-top">
-      <p class="brand"><span aria-hidden="true">🌙</span> ${esc(state.mode === 'practice' ? UI.training : UI.title)}</p>
-      <button type="button" class="btn btn-quiet btn-small" data-action="${state.mode === 'practice' ? 'back-start' : 'restart-ask'}"><span aria-hidden="true">↺</span> ${esc(state.mode === 'practice' ? UI.backToStart : UI.restart)}</button>
+      <p class="brand">${icon('moon')} ${esc(state.mode === 'practice' ? UI.training : UI.title)}</p>
+      <button type="button" class="btn btn-quiet btn-small" data-action="${state.mode === 'practice' ? 'back-start' : 'restart-ask'}">${icon('restart')} ${esc(state.mode === 'practice' ? UI.backToStart : UI.restart)}</button>
     </header>
     ${renderHud({
       res: snapshot ?? state.res,

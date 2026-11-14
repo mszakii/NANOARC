@@ -1,6 +1,7 @@
 // Qamar Square start, loadout and end cards. Owner: Lane C. Pure string builders.
 import { UI, ITEMS_COPY, ITEM_ORDER, summaryLines } from '../data/content.js';
 import { esc } from './hud.js';
+import { icon } from './icons.js';
 
 const fmt = (n) => Number(n).toLocaleString('en-US');
 
@@ -8,13 +9,13 @@ export function renderStart(view) {
   if (view.training) return renderTraining();
   return `
     <section class="card hero" aria-labelledby="hero-title">
-      <p class="hero-moon" aria-hidden="true">🌙</p>
+      <p class="hero-moon">${icon('moon')}</p>
       <h1 id="hero-title" class="hero-title">${esc(UI.title)}</h1>
       <p class="hero-line">${esc(UI.tagline)}</p>
       <p>${esc(UI.introLine)}</p>
       ${errorHtml(view)}
-      <button type="button" class="btn btn-primary btn-big" data-action="start" data-primary>🚀 ${esc(UI.start)}</button>
-      <button type="button" class="btn btn-quiet btn-big" data-action="training">${esc(UI.training)}</button>
+      <button type="button" class="btn btn-primary btn-big" data-action="start" data-primary>${icon('rocket')} ${esc(UI.start)}</button>
+      <button type="button" class="btn btn-quiet btn-big" data-action="training">${icon('water')} ${esc(UI.training)}</button>
     </section>`;
 }
 
@@ -33,7 +34,7 @@ function renderTraining() {
 
 function errorHtml(view) {
   return view.error
-    ? `<p class="warn" role="alert"><span aria-hidden="true">⚠️</span> <strong>${esc(UI.errorTitle)}.</strong> ${esc(UI.errorBody)}</p>`
+    ? `<p class="warn" role="alert">${icon('alert')} <strong>${esc(UI.errorTitle)}.</strong> ${esc(UI.errorBody)}</p>`
     : '';
 }
 
@@ -51,14 +52,14 @@ export function renderLoadout(view, { items, budget, check }) {
     return `
       <li>
         <button type="button" class="item" data-action="toggle-item" data-id="${esc(id)}" aria-pressed="${on}">
-          <span class="item-ico" aria-hidden="true">${c.icon}</span>
+          <span class="item-ico">${icon(c.icon)}</span>
           <span class="item-body">
             <span class="item-name">${esc(c.name)}</span>
             <span class="item-cost">${fmt(items[id].cost)} ${esc(UI.credits)}</span>
             <span class="item-does">${esc(c.does)}</span>
             <span class="item-when">${esc(c.when)}</span>
           </span>
-          <span class="item-state"><span aria-hidden="true">${on ? '✓' : '+'}</span> ${esc(on ? UI.packed : UI.notPacked)}</span>
+          <span class="item-state">${icon(on ? 'check' : 'plus')} ${esc(on ? UI.packed : UI.notPacked)}</span>
         </button>
       </li>`;
   }).join('');
@@ -67,7 +68,7 @@ export function renderLoadout(view, { items, budget, check }) {
   const message = over ? UI.budgetOver(fmt(-check.remaining)) : UI.budgetOk(fmt(check.remaining));
   return `
     <section class="card loadout" aria-labelledby="loadout-title">
-      <h1 id="loadout-title" class="card-title">🎒 ${esc(UI.loadoutTitle)}</h1>
+      <h1 id="loadout-title" class="card-title">${icon('bag')} ${esc(UI.loadoutTitle)}</h1>
       <p class="lead">${esc(UI.loadoutIntro)}</p>
       <ul class="items">${cards}</ul>
       <div class="budget${over ? ' is-over' : ''}">
@@ -76,23 +77,23 @@ export function renderLoadout(view, { items, budget, check }) {
           <span>${esc(UI.spentLabel)}: <b>${fmt(check.total)}</b></span>
           <span>${esc(UI.leftLabel)}: <b>${fmt(check.remaining)}</b></span>
         </p>
-        <p class="budget-msg${over ? ' warn' : ''}" id="budget-msg" data-live><span aria-hidden="true">${over ? '⚠️' : '🪙'}</span> ${esc(message)}</p>
+        <p class="budget-msg${over ? ' warn' : ''}" id="budget-msg" data-live>${icon(over ? 'alert' : 'coin')} ${esc(message)}</p>
       </div>
       ${errorHtml(view)}
       <button type="button" class="btn btn-primary btn-big" data-action="launch" data-primary
-        aria-describedby="budget-msg"${over ? ' aria-disabled="true"' : ''}>🚀 ${esc(UI.launch)}</button>
+        aria-describedby="budget-msg"${over ? ' aria-disabled="true"' : ''}>${icon('rocket')} ${esc(UI.launch)}</button>
     </section>`;
 }
 
 export function renderEnd(state) {
   return `
     <section class="card end" aria-labelledby="end-title">
-      <p class="eyebrow">🌅 ${esc(UI.endEyebrow)}</p>
+      <p class="eyebrow">${icon('sunrise')} ${esc(UI.endEyebrow)}</p>
       <h1 id="end-title" class="card-title">${esc(UI.endTitle)}</h1>
       <p class="lead">${esc(UI.endBody)}</p>
       <h2 class="tray-sub">${esc(UI.summaryTitle)}</h2>
       <ul class="decision-summary">${summaryLines(state).map((line) => `<li>${esc(line)}</li>`).join('')}</ul>
-      <p class="final-line" data-live><span aria-hidden="true">📡</span> ${esc(UI.endFinal)}</p>
+      <p class="final-line" data-live>${icon('antenna')} ${esc(UI.endFinal)}</p>
       <button type="button" class="btn btn-primary btn-big" data-action="play-again" data-primary>${esc(UI.playAgain)}</button>
     </section>`;
 }
