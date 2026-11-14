@@ -1664,3 +1664,40 @@
     }
   }
 }
+
+.scene {
+  /* While a crisis is undecided the speaker sways a little (concern); it stops once they act. */
+  .scene__crew {
+    transform-origin: 50% 100%;
+  }
+
+  &[data-screen='play'][data-phase='choose'][data-sunrise='0'] .scene__crew[data-lead='true'] {
+    animation: sc-sway 2.6s ease-in-out infinite;
+  }
+}
+
+@keyframes sc-sway {
+  0%,
+  100% {
+    rotate: -1.5deg;
+  }
+
+  50% {
+    rotate: 1.5deg;
+  }
+}
+
+.scene {
+  /* Keyboard focus: a teal dashed outline outside the active ring, so focus, active and done all differ. */
+  .hot:focus-visible,
+  .hot.is-active:focus-visible {
+    outline: 4px dashed var(--teal);
+    outline-offset: 7px;
+    box-shadow: 0 0 0 7px var(--card);
+  }
+
+  .hot:focus-visible .hot__chip {
+    text-decoration: underline 2px;
+    text-underline-offset: 3px;
+  }
+}

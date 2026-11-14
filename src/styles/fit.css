@@ -612,7 +612,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .talk .portrait {
+  .talk[data-mood] .portrait {
     animation: none;
   }
 }

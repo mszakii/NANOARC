@@ -164,6 +164,106 @@ async function tour(run) {
   writeFileSync(join(outDir, `${label}-tour-${run.w}x${run.h}-end.png`), Buffer.from(shot.data, 'base64'));
   console.log('tour done', run.w, run.h);
 }
+// Keyboard: real key events only (Enter / Tab / Shift+Tab). Reports each focused control.
+async function key(k, shift = false) {
+  const codes = { Enter: [13, String.fromCharCode(13)], Tab: [9, ''] };
+  const [vk, text] = codes[k];
+  const base = { key: k, code: k, windowsVirtualKeyCode: vk, modifiers: shift ? 8 : 0 };
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', ...base, ...(text ? { text } : {}) });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
+  await sleep(380);
+}
+const focused = () => evaluate(`(() => { const a = document.activeElement; return {
+  id: a?.dataset?.action ? a.dataset.action + (a.dataset.id ? ':' + a.dataset.id : '') : a?.dataset?.device ? 'hot:' + a.dataset.device : a?.tagName,
+  visible: a?.matches?.(':focus-visible') ?? false,
+  ring: a ? getComputedStyle(a).outlineStyle + '/' + getComputedStyle(a).boxShadow.slice(0, 40) : '',
+  step: document.querySelector('.card.panel')?.dataset.step ?? document.querySelector('.final-line') ? 'end' : '' }; })()`);
+async function keyboardRun(run) {
+  await send('Emulation.setDeviceMetricsOverride', { width: run.w, height: run.h, deviceScaleFactor: 1, mobile: false });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  const log = [];
+  let hotspotChecked = false;
+  for (let i = 0; i < 70; i += 1) {
+    const f = await focused();
+    // At the first device step, reach the marked device by Shift+Tab and activate it with Enter.
+    if (!hotspotChecked && f.id === 'open') {
+      for (let t = 0; t < 8; t += 1) {
+        await key('Tab', true);
+        const g = await focused();
+        if (g.id?.startsWith('hot:')) {
+          const shot = await send('Page.captureScreenshot', { format: 'png' });
+          writeFileSync(join(outDir, `${label}-keyboard-hotspot-focus-${run.w}x${run.h}.png`), Buffer.from(shot.data, 'base64'));
+          await key('Enter');
+          const opened = await evaluate(`[...document.querySelectorAll('[data-action="select"]')].map((b) => b.dataset.id).join(',')`);
+          log.push(`Shift+Tab x${t + 1} -> ${g.id} focus-visible=${g.visible} ring=${g.ring}; Enter opened [${opened}]`);
+          break;
+        }
+      }
+      hotspotChecked = true;
+      continue;
+    }
+    const final = await evaluate(`document.querySelector('.final-line')?.textContent.trim() ?? ''`);
+    if (final) { log.push('END: ' + final); break; }
+    log.push(f.id + (f.visible ? '' : ' (no focus-visible)'));
+    await key('Enter');
+  }
+  console.log(log.join(String.fromCharCode(10)));
+}
+// Motion check: the same valve decision with and without reduced motion.
+async function motionCheck(reduce) {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: reduce ? 'reduce' : 'no-preference' }] });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  const snap = `(() => {
+    const cs = (q) => getComputedStyle(document.querySelector(q));
+    const anims = document.getAnimations().filter((a) => a.playState === 'running');
+    return {
+      valveRotate: cs('.valve-wheel').rotate, arrowScale: cs('.heat-arrow').scale,
+      delta: document.querySelector('.scene__note--delta').textContent + ' @' + cs('.scene__note--delta').opacity,
+      hudWarmth: document.querySelector('[data-res="warmth"] .ctr-val').textContent.trim(),
+      continueReady: document.querySelector('[data-action="continue"]')?.getAttribute('aria-disabled') !== 'true',
+      running: anims.map((a) => (a.animationName ?? a.transitionProperty ?? 'waapi') + ':' + Math.round(a.effect?.getTiming?.().duration ?? 0)).slice(0, 12),
+    }; })()`;
+  await evaluate(`${HELPERS}
+    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="open"]'); await c('[data-action="select"][data-id="save_power"]');
+    await c('[data-action="confirm"]'); await c('[data-action="continue"]');
+    await c('[data-action="open"]'); await c('[data-action="select"][data-id="adjust"]');
+    await c('[data-action="confirm"]'); true;`);
+  await sleep(60);
+  const early = await evaluate(snap);
+  await sleep(1400);
+  const settled = await evaluate(snap);
+  console.log(JSON.stringify({ reduce, after60ms: early, after1460ms: settled }));
+}
+if (process.env.MOTION) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    await motionCheck(false);
+    await motionCheck(true);
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
+if (process.env.KEYS) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    await keyboardRun({ w: 1366, h: 768 });
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
 if (process.env.TOUR) {
   try {
     await send('Page.enable');
