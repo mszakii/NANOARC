@@ -1893,3 +1893,70 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
 }
+
+/* =====================================================================
+   Camera: the base layer pans and zooms to the active cabinet.
+   Only .scene__stage moves; the HUD and decision panel never scale.
+   Labels, cue, arrow and notes are counter-scaled so they stay readable.
+   ===================================================================== */
+.scene {
+  --cam-time: 900ms;
+
+  .scene__stage {
+    transform-origin: 0 0;
+    transform: translate(var(--cam-x, 0%), var(--cam-y, 0%)) scale(var(--cam-z, 1));
+    transition: transform var(--cam-time) cubic-bezier(0.45, 0.05, 0.25, 1);
+    will-change: transform;
+  }
+
+  .hot .hot__chip {
+    transform-origin: 50% 100%;
+    scale: calc(1 / var(--cam-z, 1));
+  }
+
+  .hot .hot__cue {
+    transform-origin: 50% 100%;
+    scale: calc(1 / var(--cam-z, 1));
+
+    &[data-align='start'] { transform-origin: 18% 100%; }
+    &[data-align='end'] { transform-origin: 82% 100%; }
+  }
+
+  .hot .hot__arrow {
+    transform-origin: 50% 100%;
+    scale: calc(1 / var(--cam-z, 1));
+  }
+
+  .hot[data-device='antenna'] .hot__cue,
+  .hot[data-device='antenna'] .hot__arrow {
+    transform-origin: 0% 50%;
+  }
+
+  .hot__ring {
+    border-width: calc(3px / var(--cam-z, 1));
+    box-shadow:
+      0 0 0 calc(3px / var(--cam-z, 1)) var(--ink),
+      inset 0 0 0 calc(2px / var(--cam-z, 1)) var(--ink);
+  }
+
+  .hot:focus-visible,
+  .hot.is-active:focus-visible {
+    outline-width: calc(4px / var(--cam-z, 1));
+    outline-offset: calc(7px / var(--cam-z, 1));
+  }
+
+  .scene__note {
+    font-size: calc(clamp(10px, 1.6cqi, 16px) / var(--cam-z, 1));
+    border-width: calc(2px / var(--cam-z, 1));
+  }
+
+  .scene__note--delta {
+    font-size: calc(clamp(11px, 1.8cqi, 18px) / var(--cam-z, 1));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene {
+    --cam-time: 0s;
+  }
+}

@@ -5,6 +5,10 @@
 import { CREW, UI, RES, STEPS, RECOVERY, reasonText, resultText, noteTexts } from '../data/content.js';
 import { esc } from './hud.js';
 import { icon } from './icons.js';
+import { levelOf, LEVELS, endsLevel } from '../game/rules.js';
+
+/** Label of the Continue button for the result being rendered ("Next Level" at a level boundary). */
+let continueLabel = UI.continue;
 
 const signed = (n) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`);
 
@@ -100,7 +104,7 @@ function continueFoot(ready, waitText, holdFocus = false) {
   return foot(
     ready ? '' : hintSlot('wait-why', waitText),
     `<button type="button" class="btn btn-primary btn-big" data-action="continue"${ready || holdFocus ? ' data-primary' : ''}
-      ${ready ? '' : 'aria-disabled="true" aria-describedby="wait-why"'}>${esc(UI.continue)} ${icon('arrow')}</button>`,
+      ${ready ? '' : 'aria-disabled="true" aria-describedby="wait-why"'}>${esc(continueLabel)} ${icon('arrow')}</button>`,
   );
 }
 
@@ -182,8 +186,11 @@ function recoveryPhase(state, step) {
  * @param {Array} opts    rules options(state)
  */
 export function renderPanel(state, view, opts) {
-  const step = STEPS[state.step];
-  if (!step) return '';
+  if (!STEPS[state.step]) return '';
+  // The player's chosen astronaut speaks and acts in every level.
+  const step = { ...STEPS[state.step], who: state.avatar ?? STEPS[state.step].who };
+  continueLabel = endsLevel(state) ? UI.nextLevel : UI.continue;
+  const eyebrow = state.mode === 'practice' ? UI.training : UI.levelOf(levelOf(state.step), LEVELS);
   let body;
   if (state.phase === 'recovery') body = recoveryPhase(state, step);
   else if (state.phase === 'result' && state.last) body = resultPhase(state, step, view);
@@ -200,7 +207,7 @@ export function renderPanel(state, view, opts) {
     <section class="card panel" aria-labelledby="crisis-name" data-step="${esc(state.step)}" data-phase="${esc(state.phase)}">
       <header class="panel-head">
         <div class="panel-name">
-          <p class="eyebrow">${esc(step.eyebrow)}</p>
+          <p class="eyebrow">${esc(eyebrow)}</p>
           <h2 id="crisis-name" class="card-title">${esc(step.crisis)}</h2>
         </div>
         <div class="panel-tools">

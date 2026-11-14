@@ -21,6 +21,28 @@ export function canLaunch(ids) {
   return { ok: total <= BUDGET, total, remaining: BUDGET - total };
 }
 
+/** The player's astronaut. Chosen before packing and kept for the whole run (and every checkpoint). */
+export const AVATARS = ['girl', 'boy'];
+
+/** Five levels, one cabinet each (Heat & Shelter and Water & Waste have two steps). */
+export const LEVELS = 5;
+const LEVEL_OF_STEP = { greenhouse: 1, valve: 2, shelter: 2, oxygen: 3, repair: 4, plastic: 4, signal: 5, antenna: 5, done: 5 };
+
+/** Level number (1–5) for a step. */
+export function levelOf(step) {
+  return LEVEL_OF_STEP[step] ?? 1;
+}
+
+/**
+ * True when Continue from this result leaves the current level (shown as "Next Level").
+ * Pure: compares the level now with the level after advance().
+ */
+export function endsLevel(state) {
+  if (!state || state.mode !== 'story' || state.phase !== 'result') return false;
+  const next = advance(state);
+  return next !== state && next.step !== 'done' && levelOf(next.step) !== levelOf(state.step);
+}
+
 // ---------------------------------------------------------------------------
 // Internals
 // ---------------------------------------------------------------------------
@@ -229,9 +251,10 @@ function snapshot(state) {
   return copy;
 }
 
-function baseState(mode, step, loadout) {
+function baseState(mode, step, loadout, avatar = 'girl') {
   const state = {
     mode,
+    avatar: AVATARS.includes(avatar) ? avatar : 'girl',
     step,
     phase: 'choose',
     loadout,
@@ -268,20 +291,20 @@ function baseState(mode, step, loadout) {
 // ---------------------------------------------------------------------------
 
 /** @param {string[]} ids @returns {object} state at step 'greenhouse', phase 'choose', checkpoint captured */
-export function newRun(ids) {
+export function newRun(ids, avatar = 'girl') {
   const picked = Array.isArray(ids) ? ids : [];
   const state = baseState('story', 'greenhouse', {
     battery: picked.includes('battery'),
     kit: picked.includes('kit'),
     mealPack: picked.includes('mealPack'),
-  });
+  }, avatar);
   state.checkpoint = snapshot(state);
   return state;
 }
 
 /** @param {boolean} withKit @returns {object} practice state: step 'repair', water 3 */
-export function newPractice(withKit) {
-  const state = baseState('practice', 'repair', { battery: false, kit: Boolean(withKit), mealPack: false });
+export function newPractice(withKit, avatar = 'girl') {
+  const state = baseState('practice', 'repair', { battery: false, kit: Boolean(withKit), mealPack: false }, avatar);
   state.res.water = 3;
   state.checkpoint = snapshot(state);
   return state;

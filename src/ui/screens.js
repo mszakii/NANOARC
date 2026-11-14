@@ -1,5 +1,5 @@
 // Qamar Square start, loadout and end cards. Owner: Lane C. Pure string builders.
-import { UI, ITEMS_COPY, ITEM_ORDER, summaryLines } from '../data/content.js';
+import { UI, ITEMS_COPY, ITEM_ORDER, summaryLines, CREW } from '../data/content.js';
 import { esc } from './hud.js';
 import { icon } from './icons.js';
 
@@ -86,6 +86,50 @@ export function renderLoadout(view, { items, budget, check }) {
     </section>`;
 }
 
+/** Choose the astronaut who leads the run (before packing). */
+export function renderCrew(view) {
+  const picked = view.avatar ?? null;
+  const cards = ['girl', 'boy'].map((who) => {
+    const on = picked === who;
+    return `
+      <li>
+        <button type="button" class="crew-card" data-action="pick-crew" data-id="${who}" aria-pressed="${on}"${!picked && who === 'girl' ? ' data-primary' : ''}>
+          <span class="crew-face portrait" data-who="${who}"><img src="./assets/crew/${who}-happy.webp" alt="" width="96" height="96" decoding="async" /></span>
+          <span class="crew-name">${esc(CREW[who].name)}</span>
+          <span class="crew-role">${esc(UI.crewRole[who])}</span>
+          <span class="item-state">${icon(on ? 'check' : 'plus')} ${esc(on ? UI.crewPicked : UI.crewPick(CREW[who].name))}</span>
+        </button>
+      </li>`;
+  }).join('');
+  return `
+    <section class="card crew-select" aria-labelledby="crew-title">
+      <h1 id="crew-title" class="card-title">${esc(UI.crewTitle)}</h1>
+      <p class="lead">${esc(UI.crewIntro)}</p>
+      <ul class="crew-cards">${cards}</ul>
+      <button type="button" class="btn btn-primary btn-big" data-action="confirm-crew"${picked ? ' data-primary' : ' aria-disabled="true"'}>
+        ${icon('rocket')} ${esc(picked ? UI.crewConfirm(CREW[picked].name) : UI.crewConfirmNone)}</button>
+    </section>`;
+}
+
+/** Sunrise reveal: how the signal travels, built from what this run actually did. */
+function transmitterPlan(state) {
+  const f = state.flags;
+  const cable = f.clip ? UI.planCableClip : f.cable ? UI.planCableSecured : UI.planCableNow;
+  const rows = [
+    ['sun', UI.planPower, true],
+    ['cable', cable, true],
+    ['antenna', UI.planSend, true],
+    ['info', UI.planReply, false],
+  ];
+  return `
+    <section class="plan" aria-labelledby="plan-title">
+      <h2 id="plan-title" class="tray-sub">${icon('antenna')} ${esc(UI.planTitle)}</h2>
+      <p>${esc(UI.planIntro)}</p>
+      <ol class="plan-steps">${rows.map(([ico, text, done]) => `<li class="${done ? 'is-done' : 'is-open'}">${icon(ico)} <span>${esc(text)}</span></li>`).join('')}</ol>
+      <p class="plan-question">${esc(UI.planQuestion)}</p>
+    </section>`;
+}
+
 export function renderEnd(state) {
   return `
     <section class="card end" aria-labelledby="end-title">
@@ -94,6 +138,7 @@ export function renderEnd(state) {
       <p class="lead">${esc(UI.endBody)}</p>
       <h2 class="tray-sub">${esc(UI.summaryTitle)}</h2>
       <ul class="decision-summary">${summaryLines(state).map((line) => `<li>${esc(line)}</li>`).join('')}</ul>
+      ${transmitterPlan(state)}
       <p class="final-line" data-live>${icon('antenna')} ${esc(UI.endFinal)}</p>
       <button type="button" class="btn btn-primary btn-big" data-action="play-again" data-primary>${esc(UI.playAgain)}</button>
       <p class="credits">${esc(UI.creditsLine)}</p>

@@ -63,6 +63,29 @@ const LEAD_SPOT = {
 };
 const WATER_SPOT_FOR = { recycler: [1046, 752], printer: [846, 752] };
 const PARTNER_SPOT = [740, 452];
+
+// Camera frames in SVG units [x, y, width, height]: one cabinet per level (Heat & Shelter and
+// Water & Waste have two steps). The overview shows the whole base.
+const CAMERA = {
+  greenhouse: [96, 180, 430, 318],
+  valve: [96, 470, 372, 324],
+  shelter: [490, 20, 620, 466],
+  oxygen: [436, 470, 344, 324],
+  repair: [756, 470, 352, 324],
+  plastic: [756, 470, 352, 324],
+  signal: [0, 0, 800, 340],
+  antenna: [0, 0, 800, 340],
+};
+const MAX_ZOOM = 2.2;
+
+/** Translate (as a fraction of the stage) and scale that put a frame in the middle of the view. */
+function cameraFor(frame) {
+  if (!frame) return { x: 0, y: 0, z: 1 };
+  const [fx, fy, fw, fh] = frame;
+  const z = Math.min(1200 / fw, 900 / fh, MAX_ZOOM);
+  const fit = (center, size) => Math.min(0, Math.max(1 - z, 0.5 - (center / size) * z));
+  return { x: fit(fx + fw / 2, 1200), y: fit(fy + fh / 2, 900), z };
+}
 const PARTNER_ALT_SPOT = [456, 452];
 
 const STARS = [
@@ -634,6 +657,16 @@ export function updateScene(state, view) {
   };
 
   data.phase = state?.phase ?? 'none';
+
+  // Camera: whole base on start screens, during the launch overview and at the end; otherwise the
+  // active cabinet. CSS animates the move (instant under reduced motion).
+  const overview = !playing || v.cam === 'overview' || step === 'done';
+  const cam = cameraFor(overview ? null : CAMERA[step]);
+  data.cam = overview ? 'overview' : step;
+  const root = scene.root.style;
+  root.setProperty('--cam-x', `${Math.round(cam.x * 10000) / 100}%`);
+  root.setProperty('--cam-y', `${Math.round(cam.y * 10000) / 100}%`);
+  root.setProperty('--cam-z', String(Math.round(cam.z * 1000) / 1000));
   const showDelta = playing && state.phase === 'result' && typeof v.seq !== 'number' && Boolean(state.last);
   const delta = showDelta ? deltaText(state.last) : '';
   data.delta = delta ? 1 : 0;

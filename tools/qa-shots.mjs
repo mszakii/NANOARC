@@ -75,7 +75,7 @@ const HELPERS = `
 
 const SCENARIOS = {
   valve: `${HELPERS}
-    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]');
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="save_power"]');
     await c('[data-action="confirm"]'); await c('[data-action="continue"]');
     await w(600);
@@ -83,20 +83,20 @@ const SCENARIOS = {
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="adjust"]');
     ({ closed, open: fit() });`,
   valveClosed: `${HELPERS}
-    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]');
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="save_power"]');
     await c('[data-action="confirm"]'); await c('[data-action="continue"]');
     await w(1600);
     fit();`,
   valveResult: `${HELPERS}
-    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]');
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="save_power"]');
     await c('[data-action="confirm"]'); await c('[data-action="continue"]');
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="adjust"]');
     await c('[data-action="confirm"]'); await w(900);
     fit();`,
   greenhouse: `${HELPERS}
-    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]');
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="lights_on"]');
     fit();`,
 };
@@ -105,7 +105,7 @@ const SCENARIOS = {
 SCENARIOS.journey = `${HELPERS}
   const out = [];
   const measure = (label) => { const f = fit(); out.push({ label, over: f.panelOver, trayOver: f.trayScroll[0] - f.trayScroll[1], doc: f.docScroll[1] - innerHeight, primaryVisible: f.primaryVisible }); };
-  await c('[data-action="start"]'); await c('[data-action="launch"]');
+  await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]');
   const plan = ['save_power', 'adjust', 'early', 'restart', 'standard', 'print', 'check_antenna', 'send'];
   for (const id of plan) {
     const step = document.querySelector('.card.panel')?.dataset.step;
@@ -151,7 +151,7 @@ async function tour(run) {
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: run.reduce ? 'reduce' : 'no-preference' }] });
   await send('Page.navigate', { url: base });
   await sleep(1200);
-  await evaluate(`${HELPERS} await c('[data-action="start"]'); await c('[data-action="launch"]'); true;`);
+  await evaluate(`${HELPERS} await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]'); true;`);
   for (const [name, id] of TOUR) {
     await sleep(1300);
     const shot = await send('Page.captureScreenshot', { format: 'png' });
@@ -243,7 +243,7 @@ async function motionCheck(reduce) {
       running: anims.map((a) => (a.animationName ?? a.transitionProperty ?? 'waapi') + ':' + Math.round(a.effect?.getTiming?.().duration ?? 0)).slice(0, 12),
     }; })()`;
   await evaluate(`${HELPERS}
-    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]');
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="save_power"]');
     await c('[data-action="confirm"]'); await c('[data-action="continue"]');
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="adjust"]');
@@ -379,6 +379,8 @@ async function audioRun() {
   await clickReal('[data-action="start"]');
   await sleep(300);
   out.push('first gesture (Start Mission): log ' + (await log()) + ', engine ' + (await evaluate(`globalThis.__qsSfxState()`)));
+  await clickReal('[data-action="pick-crew"][data-id="girl"]');
+  await clickReal('[data-action="confirm-crew"]');
   await clickReal('[data-action="launch"]');
   await clickReal('[data-action="open"]');
   await clickReal('[data-action="select"][data-id="save_power"]');
@@ -449,7 +451,7 @@ async function menuRun() {
   await sleep(1200);
   const q = (expr) => evaluate(expr);
   const out = [];
-  await evaluate(`${HELPERS} await c('[data-action="start"]'); await c('[data-action="launch"]'); true;`);
+  await evaluate(`${HELPERS} await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]'); true;`);
   out.push('tray header hidden: ' + (await q(`getComputedStyle(document.querySelector('.tray-top')).display`)) + ', Menu visible: ' + (await q(`getComputedStyle(document.querySelector('[data-action="tools"]')).display`)) + ', Science label: "' + (await q(`document.querySelector('.btn-science').innerText.trim()`)) + '" name "' + (await q(`document.querySelector('.btn-science').getAttribute('aria-label')`)) + '"');
   await q(`document.querySelector('[data-action="tools"]').focus(); true`);
   await key('Enter');
@@ -483,7 +485,7 @@ if (process.env.MENU) {
 // Shelter target: hotspot vs tray shortcut open the same choices (mouse, touch, keyboard); cue wording per input.
 async function toShelter() {
   await evaluate(`${HELPERS}
-    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]');
     for (const id of ['save_power', 'adjust']) {
       await c('[data-action="open"]'); await c('[data-action="select"][data-id="' + id + '"]');
       await c('[data-action="confirm"]'); await c('[data-action="continue"]');
@@ -554,7 +556,7 @@ async function reportShots() {
     await send('Page.navigate', { url: base });
     await sleep(1200);
     await evaluate(`${HELPERS}
-      await c('[data-action="start"]'); await c('[data-action="launch"]');
+      await c('[data-action="start"]'); await c('[data-action="pick-crew"][data-id="girl"]'); await c('[data-action="confirm-crew"]'); await c('[data-action="launch"]');
       for (const id of ['save_power', 'adjust']) {
         await c('[data-action="open"]'); await c('[data-action="select"][data-id="' + id + '"]');
         await c('[data-action="confirm"]'); await c('[data-action="continue"]');
@@ -581,6 +583,108 @@ if (process.env.SHOTS) {
     await send('Page.enable');
     await send('Runtime.enable');
     await reportShots();
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
+// Levels: character choice, overview -> cabinet camera, Level X of 5, Next Level, retry, carryover, ending.
+async function levelsRun({ w, h, avatar, reduce, shots }) {
+  const phone = w < 700;
+  const tag = `${avatar}-${w}x${h}${reduce ? '-reduce' : ''}`;
+  await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: phone });
+  await send('Emulation.setTouchEmulationEnabled', { enabled: phone, maxTouchPoints: phone ? 5 : 1 });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: reduce ? 'reduce' : 'no-preference' }] });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  const press = phone ? tap : clickReal;
+  const read = () => evaluate(`(() => {
+    const scene = document.querySelector('.scene');
+    const panel = document.querySelector('.card.panel');
+    const tray = document.querySelector('.tray');
+    const hud = Object.fromEntries([...document.querySelectorAll('.hud .ctr')].map((c) => [c.dataset.res, c.querySelector('.ctr-val').textContent.replace(/\\s+/g, ' ').trim()]));
+    const lead = document.querySelector('.scene__crew[data-lead="true"]');
+    const cont = document.querySelector('[data-action="continue"]');
+    const r = panel?.getBoundingClientRect(); const t = tray?.getBoundingClientRect();
+    return {
+      eyebrow: panel?.querySelector('.eyebrow')?.textContent.trim(),
+      cam: scene.dataset.cam, z: getComputedStyle(scene).getPropertyValue('--cam-z').trim(),
+      speaker: panel?.querySelector('.who')?.textContent.trim(),
+      portrait: panel?.querySelector('.portrait')?.dataset.who,
+      lead: lead?.classList.contains('scene__crew--boy') ? 'boy' : lead ? 'girl' : null,
+      cont: cont?.textContent.trim(),
+      hud,
+      fits: r && t ? r.bottom <= t.bottom + 1 && r.top >= t.top - 1 && document.documentElement.scrollHeight <= innerHeight : null,
+      stageTransition: getComputedStyle(document.querySelector('.scene__stage')).transitionDuration,
+    }; })()`);
+  const out = [];
+  await press('[data-action="start"]');
+  const crewScreen = await evaluate(`[...document.querySelectorAll('[data-action="pick-crew"]')].map((b) => b.dataset.id + ':' + b.querySelector('.crew-name').textContent).join(', ') + ' | confirm disabled=' + document.querySelector('[data-action="confirm-crew"]').getAttribute('aria-disabled')`);
+  await press(`[data-action="pick-crew"][data-id="${avatar}"]`);
+  if (shots) await shotTo(`levels-crew-${tag}`);
+  const confirmLabel = await evaluate(`document.querySelector('[data-action="confirm-crew"]').textContent.trim()`);
+  await press('[data-action="confirm-crew"]');
+  out.push(`${tag}: crew screen [${crewScreen}] -> picked ${avatar}, button "${confirmLabel}", next screen ${await evaluate(`document.querySelector('.game').dataset.screen`)}`);
+  await press('[data-action="launch"]');
+  const launch = await read();
+  if (shots) await shotTo(`levels-overview-${tag}`);
+  await sleep(1600 + (reduce ? 200 : 1300));
+  const l1 = await read();
+  out.push(`launch: cam ${launch.cam} (z ${launch.z}) -> after overview cam ${l1.cam} (z ${l1.z}), stage transition ${l1.stageTransition}`);
+  // Story (no purchases): save power, leave valve -> retry, adjust, early shelter, restart, standard, sort, send now.
+  const plan = [
+    ['save_power'], ['leave', 'retry'], ['adjust'], ['early', 'bag'], ['restart'], ['standard'], ['sort'], ['send_now'],
+  ];
+  for (const [id, extra] of plan) {
+    if (await evaluate(`Boolean(document.querySelector('[data-action="open"]'))`)) {
+      if (id === 'save_power' || id === 'leave' || id === 'early' || id === 'restart' || id === 'standard' || id === 'send_now') {
+        await press(`.hot[data-device="${{ save_power: 'greenhouse', leave: 'valve', early: 'shelter', restart: 'oxygen', standard: 'recycler', send_now: 'antenna' }[id]}"]`);
+      } else {
+        await press('[data-action="open"]');
+      }
+    }
+    const before = await read();
+    if (shots && (id === 'adjust' || id === 'restart' || id === 'standard')) await shotTo(`levels-${before.cam}-${tag}`);
+    await sleep(350);
+    await press(`[data-action="select"][data-id="${id}"]`);
+    await sleep(350);
+    await press('[data-action="confirm"]');
+    await sleep(id === 'standard' ? 2400 : 500);
+    if (extra === 'retry') {
+      const rec = await read();
+      await press('[data-action="retry"]');
+      await sleep(400);
+      const after = await read();
+      out.push(`retry: recovery warmth ${rec.hud.warmth} -> after retry ${after.eyebrow}, cam ${after.cam}, power ${after.hud.power}, warmth ${after.hud.warmth}, speaker ${after.speaker}`);
+      continue;
+    }
+    if (extra === 'bag') {
+      await sleep(350); await press('[data-action="bag"]'); await sleep(350); await press('[data-action="bag-spot"]'); await sleep(350);
+    }
+    const res = await read();
+    out.push(`${res.eyebrow} ${id}: cam ${before.cam} z${before.z} | speaker ${res.speaker} portrait ${res.portrait} lead ${res.lead} | power ${res.hud.power} water ${res.hud.water} meals ${res.hud.meals} warmth ${res.hud.warmth} | fits ${before.fits}/${res.fits} | button "${res.cont}"`);
+    await sleep(350);
+    await press('[data-action="continue"]');
+    await sleep(reduce ? 300 : 1200);
+  }
+  const end = await evaluate(`(() => ({
+    screen: document.querySelector('.game').dataset.screen, cam: document.querySelector('.scene').dataset.cam, sunrise: document.querySelector('.scene').dataset.sunrise,
+    plan: [...document.querySelectorAll('.plan-steps li')].map((li) => li.textContent.trim()),
+    question: document.querySelector('.plan-question')?.textContent.trim(), final: document.querySelector('.final-line')?.textContent.trim(),
+  }))()`);
+  if (shots) await shotTo(`levels-end-${tag}`);
+  out.push(`end: screen ${end.screen}, cam ${end.cam}, sunrise ${end.sunrise}; plan: ${end.plan.join(' / ')}; question "${end.question}"; final "${end.final}"`);
+  console.log(out.join(String.fromCharCode(10)));
+}
+if (process.env.LEVELS) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    await levelsRun({ w: 1366, h: 768, avatar: 'girl', reduce: false, shots: true });
+    await levelsRun({ w: 375, h: 812, avatar: 'boy', reduce: false, shots: true });
+    await levelsRun({ w: 360, h: 692, avatar: 'girl', reduce: true, shots: false });
   } finally {
     ws.close();
     chrome.kill();

@@ -9,7 +9,7 @@ import { mountScene, updateScene, DEVICE_FOR_STEP } from './ui/scene.js';
 import { UI, STEPS } from './data/content.js';
 import { esc, renderHud } from './ui/hud.js';
 import { renderPanel } from './ui/panel.js';
-import { renderStart, renderLoadout, renderEnd } from './ui/screens.js';
+import { renderStart, renderLoadout, renderEnd, renderCrew } from './ui/screens.js';
 import { openScience } from './ui/science.js';
 import { icon } from './ui/icons.js';
 import { play, setSound, soundOn, soundAvailable, primeSound } from './ui/sound.js';
@@ -20,7 +20,11 @@ const STEP_ORDER = ['greenhouse', 'valve', 'shelter', 'oxygen', 'repair', 'plast
 /** Rules state. null before launch. */
 let state = null;
 /** View state. The scene reads screen, open, selected, bagStage and seq. */
-const view = { screen: 'start', open: false, selected: null, bagStage: 0, seq: null, picks: [], error: false };
+const view = { screen: 'start', open: false, selected: null, bagStage: 0, seq: null, picks: [], error: false, avatar: null, cam: 'room' };
+
+/** After launch the whole base shows briefly, then the camera moves to Level 1. */
+const OVERVIEW_MS = 1600;
+let overviewTimer = null;
 let seqTimer = null;
 
 // ---------- Shell DOM (built once) ----------
@@ -98,6 +102,11 @@ function startSequence() {
 
 function resetView(screen) {
   stopSequence();
+  if (overviewTimer !== null) {
+    clearTimeout(overviewTimer);
+    overviewTimer = null;
+  }
+  view.cam = 'room';
   view.screen = screen;
   view.open = false;
   view.selected = null;
@@ -151,7 +160,7 @@ function dispatch(action) {
 
       case 'practice':
         if (view.screen !== 'start' || !view.training || !['kit', 'standard'].includes(action.id)) return;
-        state = rules.newPractice(action.id === 'kit');
+        state = rules.newPractice(action.id === 'kit', view.avatar ?? 'girl');
         resetView('play');
         break;
 
@@ -163,6 +172,17 @@ function dispatch(action) {
         break;
 
       case 'start':
+        resetView('crew');
+        break;
+
+      case 'pick-crew':
+        if (view.screen !== 'crew' || !rules.AVATARS.includes(action.id)) return;
+        view.avatar = action.id;
+        focus = '[data-action="confirm-crew"]';
+        break;
+
+      case 'confirm-crew':
+        if (view.screen !== 'crew' || !view.avatar) return;
         resetView('loadout');
         break;
 
@@ -177,8 +197,15 @@ function dispatch(action) {
 
       case 'launch': {
         if (view.screen !== 'loadout' || !rules.canLaunch(view.picks).ok) return;
-        state = rules.newRun([...view.picks]);
+        state = rules.newRun([...view.picks], view.avatar ?? 'girl');
         resetView('play');
+        // Show the whole base first, then pan and zoom to the Level 1 cabinet.
+        view.cam = 'overview';
+        overviewTimer = setTimeout(() => {
+          overviewTimer = null;
+          view.cam = 'room';
+          updateScene(state, view);
+        }, OVERVIEW_MS);
         break;
       }
 
@@ -277,7 +304,7 @@ function dispatch(action) {
       case 'play-again':
         state = null;
         view.picks = [];
-        resetView('loadout');
+        resetView('crew');
         break;
 
       case 'science':
@@ -356,6 +383,8 @@ function trayHtml() {
 
 function screenHtml() {
   switch (view.screen) {
+    case 'crew':
+      return renderCrew(view);
     case 'loadout':
       return renderLoadout(view, { items: rules.ITEMS, budget: rules.BUDGET, check: rules.canLaunch(view.picks) });
     case 'play':
@@ -390,7 +419,7 @@ function render(focus = null) {
 
   try {
     // The crew member who speaks in the tray is the one who walks to the device.
-    view.speaker = STEPS[state?.step]?.who ?? 'girl';
+    view.speaker = state?.avatar ?? view.avatar ?? 'girl';
     updateScene(state, view);
   } catch (error) {
     console.error('[Qamar Square] scene', error);
