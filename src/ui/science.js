@@ -16,6 +16,16 @@ function ensureDialog() {
   document.body.append(dlg);
 
   dlg.addEventListener('click', (event) => {
+    const modeButton = event.target.closest('[data-iss-mode]');
+    if (modeButton) {
+      const mode = SCIENCE_UI.issModes.find((m) => m.pct === Number(modeButton.dataset.issMode));
+      if (!mode) return;
+      for (const button of dlg.querySelectorAll('[data-iss-mode]')) {
+        button.setAttribute('aria-pressed', String(button === modeButton));
+      }
+      dlg.querySelector('#iss-content').innerHTML = comparisonBody(mode);
+      return;
+    }
     if (event.target === dlg || event.target.closest('[data-science-close]')) dlg.close();
   });
   dlg.addEventListener('close', () => {
@@ -26,6 +36,28 @@ function ensureDialog() {
     target?.focus();
   });
   return dlg;
+}
+
+function comparisonBody(mode) {
+  return `
+    <div class="iss-drops" role="img" aria-label="${esc(SCIENCE_UI.issTreated(mode.drops))} ${esc(SCIENCE_UI.issLeft(20 - mode.drops))}">
+      ${Array.from({ length: 20 }, (_, i) => `<span class="iss-drop" data-recovered="${i < mode.drops}" aria-hidden="true">💧<b>${i < mode.drops ? '✓' : '−'}</b></span>`).join('')}
+    </div>
+    <div role="status">
+      <p><strong>${esc(SCIENCE_UI.issTreated(mode.drops))}</strong></p>
+      <p>${esc(SCIENCE_UI.issLeft(20 - mode.drops))}</p>
+      <p>${esc(SCIENCE_UI.issWhy[mode.pct])}</p>
+    </div>`;
+}
+
+function comparisonHtml() {
+  return `
+    <div class="iss-modes" role="group" aria-label="${esc(SCIENCE_UI.issSettings)}">
+      ${SCIENCE_UI.issModes.map((mode, i) => `<button type="button" class="btn btn-quiet" data-iss-mode="${mode.pct}" aria-pressed="${i === 0}">${esc(mode.label)}</button>`).join('')}
+    </div>
+    <div id="iss-content">${comparisonBody(SCIENCE_UI.issModes[0])}</div>
+    <p class="iss-legend">✓ ${esc(SCIENCE_UI.issLegendTreated)}<br>− ${esc(SCIENCE_UI.issLegendLeft)}</p>
+    <p class="teaching">${esc(SCIENCE_UI.issNote)}</p>`;
 }
 
 function topicHtml(topic) {
@@ -40,6 +72,7 @@ function topicHtml(topic) {
     <p class="eyebrow" id="science-heading">🔬 ${esc(SCIENCE_UI.heading)}</p>
     <h3 class="dlg-title">${esc(topic.title)}</h3>
     ${topic.body.map((p) => `<p>${esc(p)}</p>`).join('')}
+    ${topic.compare ? comparisonHtml() : ''}
     ${facts}
     <h4>${esc(SCIENCE_UI.sources)}</h4>
     <ul class="links">${links}</ul>

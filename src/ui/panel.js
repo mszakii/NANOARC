@@ -137,7 +137,9 @@ function resultPhase(state, step, view) {
   return `
     ${talk(step, 'happy', UI.resultTalk, false)}
     ${resultBody(state, true)}
-    ${continueButton(true)}`;
+    ${state.mode === 'practice' ? `
+      <p>${esc(UI.trainDone)}</p>
+      <button type="button" class="btn btn-primary btn-big" data-action="training" data-primary>${esc(UI.trainBoth)}</button>` : continueButton(true)}`;
 }
 
 function recoveryPhase(state, step) {
@@ -169,6 +171,9 @@ export function renderPanel(state, view, opts) {
         <h2 id="crisis-name" class="card-title">${esc(step.crisis)}</h2>
       </header>
       ${body}
+      ${state.step === 'repair' ? `
+        <button type="button" class="btn btn-quiet" data-action="science" data-id="iss">${esc(UI.compareIss)}</button>
+        <button type="button" class="btn btn-quiet" data-action="science" data-id="notebook">${esc(UI.notebook)}</button>` : ''}
       <button type="button" class="btn btn-quiet btn-small" data-action="science" data-id="${esc(step.science)}"><span aria-hidden="true">🔬</span> ${esc(UI.science)}</button>
     </section>`;
 }

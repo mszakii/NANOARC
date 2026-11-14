@@ -1,17 +1,33 @@
 // Qamar Square start, loadout and end cards. Owner: Lane C. Pure string builders.
-import { UI, ITEMS_COPY, ITEM_ORDER } from '../data/content.js';
+import { UI, ITEMS_COPY, ITEM_ORDER, summaryLines } from '../data/content.js';
 import { esc } from './hud.js';
 
 const fmt = (n) => Number(n).toLocaleString('en-US');
 
 export function renderStart(view) {
+  if (view.training) return renderTraining();
   return `
     <section class="card hero" aria-labelledby="hero-title">
       <p class="hero-moon" aria-hidden="true">🌙</p>
       <h1 id="hero-title" class="hero-title">${esc(UI.title)}</h1>
       <p class="hero-line">${esc(UI.tagline)}</p>
+      <p>${esc(UI.introLine)}</p>
       ${errorHtml(view)}
       <button type="button" class="btn btn-primary btn-big" data-action="start" data-primary>🚀 ${esc(UI.start)}</button>
+      <button type="button" class="btn btn-quiet btn-big" data-action="training">${esc(UI.training)}</button>
+    </section>`;
+}
+
+function renderTraining() {
+  return `
+    <section class="card" aria-labelledby="training-title">
+      <h1 id="training-title" class="card-title">${esc(UI.trainingTitle)}</h1>
+      <p class="lead">${esc(UI.trainingIntro)}</p>
+      <button type="button" class="btn btn-primary btn-big" data-action="practice" data-id="kit" data-primary>${esc(UI.trainKit)}</button>
+      <p>${esc(UI.trainKitWhat)}</p>
+      <button type="button" class="btn btn-primary btn-big" data-action="practice" data-id="standard">${esc(UI.trainStandard)}</button>
+      <p>${esc(UI.trainStandardWhat)}</p>
+      <button type="button" class="btn btn-quiet" data-action="back-start">${esc(UI.backToStart)}</button>
     </section>`;
 }
 
@@ -68,12 +84,14 @@ export function renderLoadout(view, { items, budget, check }) {
     </section>`;
 }
 
-export function renderEnd() {
+export function renderEnd(state) {
   return `
     <section class="card end" aria-labelledby="end-title">
       <p class="eyebrow">🌅 ${esc(UI.endEyebrow)}</p>
       <h1 id="end-title" class="card-title">${esc(UI.endTitle)}</h1>
       <p class="lead">${esc(UI.endBody)}</p>
+      <h2 class="tray-sub">${esc(UI.summaryTitle)}</h2>
+      <ul class="decision-summary">${summaryLines(state).map((line) => `<li>${esc(line)}</li>`).join('')}</ul>
       <p class="final-line" data-live><span aria-hidden="true">📡</span> ${esc(UI.endFinal)}</p>
       <button type="button" class="btn btn-primary btn-big" data-action="play-again" data-primary>${esc(UI.playAgain)}</button>
     </section>`;

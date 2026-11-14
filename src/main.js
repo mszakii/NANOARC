@@ -82,6 +82,7 @@ function resetView(screen) {
   view.selected = null;
   view.bagStage = 0;
   view.error = false;
+  view.training = false;
 }
 
 function currentOptions() {
@@ -90,6 +91,7 @@ function currentOptions() {
 }
 
 function canContinue() {
+  if (state?.mode === 'practice') return false;
   if (!state || state.phase !== 'result') return false;
   if (state.step === 'shelter' && view.bagStage < 2) return false;
   return view.seq === null;
@@ -106,6 +108,25 @@ function dispatch(action) {
   let focus = null; // CSS selector inside the tray, or null for the primary action
   try {
     switch (action.type) {
+      case 'training':
+        if (state && state.mode !== 'practice') return;
+        state = null;
+        resetView('start');
+        view.training = true;
+        break;
+
+      case 'practice':
+        if (view.screen !== 'start' || !view.training || !['kit', 'standard'].includes(action.id)) return;
+        state = rules.newPractice(action.id === 'kit');
+        resetView('play');
+        break;
+
+      case 'back-start':
+        if (state && state.mode !== 'practice') return;
+        state = null;
+        resetView('start');
+        break;
+
       case 'start':
         resetView('loadout');
         break;
@@ -234,13 +255,13 @@ function playHtml() {
   if (state.step === 'oxygen') keys.push('generator', 'oxygen');
   return `
     <header class="tray-top">
-      <p class="brand"><span aria-hidden="true">🌙</span> ${esc(UI.title)}</p>
-      <button type="button" class="btn btn-quiet btn-small" data-action="restart-ask"><span aria-hidden="true">↺</span> ${esc(UI.restart)}</button>
+      <p class="brand"><span aria-hidden="true">🌙</span> ${esc(state.mode === 'practice' ? UI.training : UI.title)}</p>
+      <button type="button" class="btn btn-quiet btn-small" data-action="${state.mode === 'practice' ? 'back-start' : 'restart-ask'}"><span aria-hidden="true">↺</span> ${esc(state.mode === 'practice' ? UI.backToStart : UI.restart)}</button>
     </header>
     ${renderHud({
       res: snapshot ?? state.res,
       projected: picked?.after ?? null,
-      generatorOn: beforeOxygen || Boolean(state.flags.generator),
+      generatorOn: state.mode === 'practice' || beforeOxygen || Boolean(state.flags.generator),
       keys,
     })}
     ${renderPanel(state, view, opts)}`;
@@ -254,7 +275,7 @@ function trayHtml() {
       return playHtml();
     case 'end':
       return `
-        ${renderEnd()}
+        ${renderEnd(state)}
         <h2 class="tray-sub">${esc(UI.endSupplies)}</h2>
         ${renderHud({ res: state.res, generatorOn: Boolean(state.flags.generator) })}`;
     default:

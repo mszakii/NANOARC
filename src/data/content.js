@@ -370,6 +370,7 @@ export const SCIENCE_UI = {
     { pct: 70, drops: 14, label: '70% historical recovery' },
     { pct: 85, drops: 17, label: '85% historical recovery' },
   ],
+  issSettings: 'Historical urine-processor recovery settings',
   issTreated: (n) => `${n} of 20 drops go to Further Treatment.`,
   issLeft: (n) => `${n} drops stay behind as brine.`,
   issWhy: {

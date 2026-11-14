@@ -30,6 +30,10 @@ npm run preview
 
 `npm run build` writes a static site to `dist/`. It has no server, account, database or API key, and runs from any static host or subfolder.
 
+The start screen also offers **Water Training**: try standard tools and the repair kit from the same 3-bottle checkpoint. **Compare ISS Recovery** opens a historical 20-drop illustration without changing mission supplies. The ending summarises the decisions made in that run and leaves signal confirmation pending.
+
+See `docs/BUILD_STATUS.md` for checks actually completed and remaining physical-touch/reduced-motion verification, and `docs/DEMO.md` for a short judging route. Videos are optional; the intro and notebook have text fallbacks.
+
 ## How the project is organised
 
 | Path | What is in it |
