@@ -181,9 +181,18 @@ const focused = () => evaluate(`(() => { const a = document.activeElement; retur
 async function keyboardRun(run) {
   await send('Emulation.setDeviceMetricsOverride', { width: run.w, height: run.h, deviceScaleFactor: 1, mobile: false });
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  if (process.env.NOAUDIO) {
+    // Simulate a browser without Web Audio: the game must stay fully playable.
+    await send('Page.addScriptToEvaluateOnNewDocument', { source: 'delete window.AudioContext; delete window.webkitAudioContext;' });
+  }
   await send('Page.navigate', { url: base });
   await sleep(1200);
   const log = [];
+  if (process.env.NOAUDIO) {
+    await evaluate(`document.querySelector('[data-action="sound"]').click(); true`);
+    log.push('no Web Audio: toggle reads "' + (await evaluate(`document.querySelector('[data-action="sound"]').textContent.trim()`)) + '"');
+    await evaluate(`document.querySelector('[data-action="start"]').focus(); true`);
+  }
   let hotspotChecked = false;
   for (let i = 0; i < 70; i += 1) {
     const f = await focused();
@@ -343,7 +352,8 @@ async function notebookRun({ w, h, reduce }) {
 
 // Audio: muted at start, on after a real click, one sound per confirmed action, none on re-render.
 async function audioRun() {
-  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false });
+  const phone = Boolean(process.env.PHONE);
+  await send('Emulation.setDeviceMetricsOverride', { width: phone ? 375 : 1366, height: phone ? 812 : 768, deviceScaleFactor: 1, mobile: phone });
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
   await send('Page.navigate', { url: base });
   await sleep(1200);

@@ -12,6 +12,7 @@ import { renderPanel } from './ui/panel.js';
 import { renderStart, renderLoadout, renderEnd } from './ui/screens.js';
 import { openScience } from './ui/science.js';
 import { icon } from './ui/icons.js';
+import { play, setSound, soundOn, soundAvailable } from './ui/sound.js';
 
 const TURN_MS = 900;
 const STEP_ORDER = ['greenhouse', 'valve', 'shelter', 'oxygen', 'repair', 'plastic', 'signal', 'antenna', 'done'];
@@ -69,6 +70,7 @@ function startSequence() {
     if (view.seq + 1 < total) {
       view.seq += 1;
       seqTimer = setTimeout(tick, TURN_MS);
+      play('drop'); // one droplet per repair turn, in step with the bottle count
     } else {
       view.seq = null;
     }
@@ -105,9 +107,22 @@ function onDevice(id) {
   else if (state && id === DEVICE_FOR_STEP[state.step]) dispatch({ type: 'open' });
 }
 
+// The main tray button keeps one place across phases (Open, Confirm, Continue, Retry), so a fast
+// double click would land on the next phase's button. Ignore a second one within this window.
+const FOOT_ACTIONS = new Set(['open', 'confirm', 'continue', 'retry']);
+const FOOT_GUARD_MS = 300;
+let lastFootAt = -Infinity;
+
 // ---------- Store ----------
 function dispatch(action) {
+  if (FOOT_ACTIONS.has(action.type)) {
+    const now = performance.now();
+    if (now - lastFootAt < FOOT_GUARD_MS) return;
+    lastFootAt = now;
+  }
   let focus = null; // CSS selector inside the tray, or null for the primary action
+  // Every branch that reaches render() changed something, so it earns one sound; no-ops return early.
+  let sfx = 'click';
   try {
     switch (action.type) {
       case 'training':
@@ -160,7 +175,10 @@ function dispatch(action) {
         if (!opt) return;
         // Unavailable options stay focusable and explain themselves, but cannot be picked.
         if (opt.available) view.selected = opt.id;
-        else focus = `[data-action="select"][data-id="${opt.id}"]`;
+        else {
+          focus = `[data-action="select"][data-id="${opt.id}"]`;
+          sfx = null;
+        }
         break;
       }
 
@@ -173,6 +191,7 @@ function dispatch(action) {
         view.selected = null;
         view.bagStage = 0;
         if (state.phase === 'result') startSequence();
+        sfx = soundForResult(state);
         break;
       }
 
@@ -236,14 +255,39 @@ function dispatch(action) {
         openScience(action.id);
         return;
 
+      case 'sound':
+        // Turning sound on happens inside this click, so the browser allows audio to start.
+        setSound(!soundOn());
+        sfx = soundOn() ? 'click' : null;
+        focus = '[data-action="sound"]';
+        break;
+
       default:
         return;
     }
   } catch (error) {
     console.error('[Qamar Square]', error);
     view.error = true;
+    sfx = null;
   }
   render(focus);
+  if (sfx) play(sfx);
+}
+
+/** The sound that matches a confirmed result: valve ratchet, water drops, antenna relay, else a click. */
+function soundForResult(s) {
+  const last = s.last;
+  if (!last) return 'click';
+  if (last.step === 'valve' && last.option === 'adjust') return 'valve';
+  if (last.step === 'repair') return 'drop';
+  if (s.flags.sent) return 'relay';
+  return 'click';
+}
+
+function soundButton() {
+  const on = soundOn();
+  const label = soundAvailable() || !on ? (on ? UI.soundOn : UI.soundOff) : UI.soundNone;
+  return `<button type="button" class="btn btn-quiet btn-small btn-sound" data-action="sound" aria-pressed="${on}">${icon(on ? 'sound' : 'mute')} ${esc(label)}</button>`;
 }
 
 // ---------- Render ----------
@@ -258,7 +302,10 @@ function playHtml() {
   return `
     <header class="tray-top">
       <p class="brand">${icon('moon')} ${esc(state.mode === 'practice' ? UI.training : UI.title)}</p>
-      <button type="button" class="btn btn-quiet btn-small" data-action="${state.mode === 'practice' ? 'back-start' : 'restart-ask'}">${icon('restart')} ${esc(state.mode === 'practice' ? UI.backToStart : UI.restart)}</button>
+      <div class="tray-tools">
+        ${soundButton()}
+        <button type="button" class="btn btn-quiet btn-small" data-action="${state.mode === 'practice' ? 'back-start' : 'restart-ask'}">${icon('restart')} ${esc(state.mode === 'practice' ? UI.backToStart : UI.restart)}</button>
+      </div>
     </header>
     ${renderHud({
       res: snapshot ?? state.res,
@@ -270,6 +317,15 @@ function playHtml() {
 }
 
 function trayHtml() {
+  if (view.screen === 'play') return playHtml();
+  return `${screenHtml()}
+    <header class="tray-top tray-top--plain">
+      <p class="brand">${icon('moon')} ${esc(UI.title)}</p>
+      <div class="tray-tools">${soundButton()}</div>
+    </header>`;
+}
+
+function screenHtml() {
   switch (view.screen) {
     case 'loadout':
       return renderLoadout(view, { items: rules.ITEMS, budget: rules.BUDGET, check: rules.canLaunch(view.picks) });
