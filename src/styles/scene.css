@@ -1859,3 +1859,37 @@
   left: 52%;
   top: 5%;
 }
+
+.scene {
+  /* A few background stars twinkle slowly and softly; the foreground never moves for this. */
+  .star.star--twinkle {
+    animation: sc-twinkle-soft 6.5s ease-in-out infinite;
+  }
+
+  .star.star--twinkle:nth-of-type(8n + 1) { animation-delay: -1.7s; animation-duration: 7.8s; }
+  .star.star--twinkle:nth-of-type(8n + 5) { animation-delay: -3.9s; animation-duration: 5.9s; }
+
+  /* Flags: still, on the ground, away from the roof controls and hotspots. */
+  .flag-pole {
+    fill: none;
+    stroke: #c9ced8;
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  .flag-cloth {
+    stroke: var(--ink);
+    stroke-width: 2.5;
+  }
+
+  .flag-cloth--navy { fill: #0a0e1a; }
+  .flag-cloth--mission { fill: var(--room); }
+  .flag-moon { fill: var(--teal); }
+  .flag-star { fill: var(--sun); stroke: var(--ink); stroke-width: 1; }
+  .flag-foot { fill: rgb(23 35 60 / 0.25); }
+}
+
+@keyframes sc-twinkle-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}

@@ -97,6 +97,7 @@ export const UI = {
 
   compareIss: 'Compare ISS Recovery',
   notebook: 'Open Notebook',
+  creditsLine: 'A NANOARC project for the NASA Space Apps Challenge.',
   menu: 'Menu',
   menuTitle: 'Mission menu',
   menuClose: 'Close',

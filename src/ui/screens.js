@@ -16,6 +16,7 @@ export function renderStart(view) {
       ${errorHtml(view)}
       <button type="button" class="btn btn-primary btn-big" data-action="start" data-primary>${icon('rocket')} ${esc(UI.start)}</button>
       <button type="button" class="btn btn-quiet btn-big" data-action="training">${icon('water')} ${esc(UI.training)}</button>
+      <p class="credits">${esc(UI.creditsLine)}</p>
     </section>`;
 }
 
@@ -95,5 +96,6 @@ export function renderEnd(state) {
       <ul class="decision-summary">${summaryLines(state).map((line) => `<li>${esc(line)}</li>`).join('')}</ul>
       <p class="final-line" data-live>${icon('antenna')} ${esc(UI.endFinal)}</p>
       <button type="button" class="btn btn-primary btn-big" data-action="play-again" data-primary>${esc(UI.playAgain)}</button>
+      <p class="credits">${esc(UI.creditsLine)}</p>
     </section>`;
 }

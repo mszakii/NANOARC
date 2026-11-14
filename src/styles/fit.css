@@ -957,3 +957,10 @@
   .slot-hint .cue-touch { display: none; }
   .slot-hint .cue-mouse { display: inline; }
 }
+
+.credits {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}

@@ -193,6 +193,21 @@ function art() {
   <ellipse class="crater" cx="860" cy="872" rx="52" ry="11"/>
   <ellipse class="crater" cx="1160" cy="842" rx="30" ry="8"/>
 
+  <!-- Flags on the lunar surface (still, decorative). NANOARC logo keeps its own proportions (meet). -->
+  <g class="flag flag--nanoarc">
+    <path class="flag-pole" d="M30 800V690"/>
+    <rect class="flag-cloth flag-cloth--navy" x="32" y="692" width="58" height="56" rx="3"/>
+    <image href="./assets/brand/nanoarc-logo.webp" x="35" y="694" width="52" height="52" preserveAspectRatio="xMidYMid meet"/>
+    <ellipse class="flag-foot" cx="30" cy="800" rx="9" ry="3"/>
+  </g>
+  <g class="flag flag--mission">
+    <path class="flag-pole" d="M1144 800V696"/>
+    <rect class="flag-cloth flag-cloth--mission" x="1146" y="698" width="50" height="38" rx="3"/>
+    <path class="flag-moon" d="M1178 708a11 11 0 1 0 0 20a8.5 8.5 0 1 1 0-20z"/>
+    <circle class="flag-star" cx="1160" cy="711" r="2.4"/>
+    <ellipse class="flag-foot" cx="1144" cy="800" rx="9" ry="3"/>
+  </g>
+
   <g class="heat-arrow">
     <path class="o heat-arrow__shape" d="M98 622H54V602L10 640L54 678V658H98Z"/>
     <path class="heat-arrow__waves" d="M40 640q7-8 14 0t14 0t14 0"/>
