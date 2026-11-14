@@ -38,6 +38,8 @@ Audio checks confirm which effects started (the page's `__qsSfx` log); headless 
 
 **Re-checked:** headless Chrome with `--autoplay-policy=user-gesture-required` (the normal browser rule): after a real click on **Sound Effects: Off**, the engine state is **running**, one click logs; Confirm ×3 → one `valve`; repair → two `drop`; Send Now → one `relay`; muting suspends the engine; story ends on the final line. Same at 375×812. `npm test` 31/31, `npm run build` pass.
 
+**Heard:** Ahmed confirmed on 14 Nov that the effects are audible after turning **Sound Effects** On (his own browser and speakers; device not recorded). Physical-phone audio is still part of `docs/MANUAL_CHECKS.md`.
+
 To re-measure levels: run `npm run dev`, open the game, and in the browser console run `const m = await import('/src/ui/sound.js'); for (const n of m.SOUND_NAMES) console.log(await m.measureSound(n));`.
 
 ## UI pass (14 Nov) — fit, marker, icons, motion
