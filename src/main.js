@@ -6,7 +6,7 @@ import './styles/ui.css';
 import './styles/fit.css';
 import * as rules from './game/rules.js';
 import { mountScene, updateScene, DEVICE_FOR_STEP } from './ui/scene.js';
-import { UI } from './data/content.js';
+import { UI, STEPS } from './data/content.js';
 import { esc, renderHud } from './ui/hud.js';
 import { renderPanel } from './ui/panel.js';
 import { renderStart, renderLoadout, renderEnd } from './ui/screens.js';
@@ -304,6 +304,8 @@ function render(focus = null) {
   tray.innerHTML = html;
 
   try {
+    // The crew member who speaks in the tray is the one who walks to the device.
+    view.speaker = STEPS[state?.step]?.who ?? 'girl';
     updateScene(state, view);
   } catch (error) {
     console.error('[Qamar Square] scene', error);

@@ -68,6 +68,7 @@ const HELPERS = `
       docScroll: [document.documentElement.scrollWidth, document.documentElement.scrollHeight],
       trayScroll: tray ? [tray.scrollHeight, tray.clientHeight] : null,
       primaryVisible: r ? r.top >= 0 && r.bottom <= innerHeight : null,
+      panelOver: (() => { const p = document.querySelector('.card.panel, .card'); const t = tray?.getBoundingClientRect(); if (!p || !t) return null; const b = p.getBoundingClientRect(); return Math.max(0, Math.round(b.bottom - t.bottom), Math.round(t.top - b.top)); })(),
       primary: primary?.textContent.trim().replace(/\\s+/g, ' '),
     };
   };`;
@@ -81,6 +82,19 @@ const SCENARIOS = {
     const closed = fit();
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="adjust"]');
     ({ closed, open: fit() });`,
+  valveClosed: `${HELPERS}
+    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="open"]'); await c('[data-action="select"][data-id="save_power"]');
+    await c('[data-action="confirm"]'); await c('[data-action="continue"]');
+    await w(1600);
+    fit();`,
+  valveResult: `${HELPERS}
+    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    await c('[data-action="open"]'); await c('[data-action="select"][data-id="save_power"]');
+    await c('[data-action="confirm"]'); await c('[data-action="continue"]');
+    await c('[data-action="open"]'); await c('[data-action="select"][data-id="adjust"]');
+    await c('[data-action="confirm"]'); await w(900);
+    fit();`,
   greenhouse: `${HELPERS}
     await c('[data-action="start"]'); await c('[data-action="launch"]');
     await c('[data-action="open"]'); await c('[data-action="select"][data-id="lights_on"]');
@@ -90,7 +104,7 @@ const SCENARIOS = {
 // Walk a whole run and measure every decision: open, preview, result.
 SCENARIOS.journey = `${HELPERS}
   const out = [];
-  const measure = (label) => { const f = fit(); out.push({ label, over: f.trayScroll[0] - f.trayScroll[1], doc: f.docScroll[1] - innerHeight, primaryVisible: f.primaryVisible }); };
+  const measure = (label) => { const f = fit(); out.push({ label, over: f.panelOver, trayOver: f.trayScroll[0] - f.trayScroll[1], doc: f.docScroll[1] - innerHeight, primaryVisible: f.primaryVisible }); };
   await c('[data-action="start"]'); await c('[data-action="launch"]');
   const plan = ['save_power', 'adjust', 'early', 'restart', 'standard', 'print', 'check_antenna', 'send'];
   for (const id of plan) {
@@ -111,12 +125,59 @@ const RUNS = [
   { name: 'valve-1920x1080', w: 1920, h: 1080, mobile: false, scenario: 'valve' },
   { name: 'greenhouse-375x812', w: 375, h: 812, mobile: true, scenario: 'greenhouse' },
   { name: 'valve-375x812', w: 375, h: 812, mobile: true, scenario: 'valve' },
+  { name: 'valve-closed-1366x768', w: 1366, h: 768, mobile: false, scenario: 'valveClosed' },
+  { name: 'valve-result-1366x768', w: 1366, h: 768, mobile: false, scenario: 'valveResult' },
+  { name: 'valve-closed-375x812', w: 375, h: 812, mobile: true, scenario: 'valveClosed' },
 ];
 
 if (process.env.JOURNEY) RUNS.splice(0, RUNS.length,
   { name: 'journey-1366x768', w: 1366, h: 768, mobile: false, scenario: 'journey' },
   { name: 'journey-1920x1080', w: 1920, h: 1080, mobile: false, scenario: 'journey' },
   { name: 'journey-375x812', w: 375, h: 812, mobile: true, scenario: 'journey' });
+
+// Tour: screenshot each active device before it is opened, then make a choice and move on.
+const TOUR = [
+  ['greenhouse', 'save_power'], ['valve', 'adjust'], ['shelter', 'at_alert'], ['bag', null], ['bag-spot', null],
+  ['oxygen', 'restart'], ['recycler', 'standard'], ['printer', 'print'], ['antenna', 'check_antenna'], ['antenna2', 'send'],
+];
+async function tour(run) {
+  await send('Emulation.setDeviceMetricsOverride', { width: run.w, height: run.h, deviceScaleFactor: 1, mobile: run.mobile });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: run.reduce ? 'reduce' : 'no-preference' }] });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  await evaluate(`${HELPERS} await c('[data-action="start"]'); await c('[data-action="launch"]'); true;`);
+  for (const [name, id] of TOUR) {
+    await sleep(1300);
+    const shot = await send('Page.captureScreenshot', { format: 'png' });
+    writeFileSync(join(outDir, `${label}-tour-${run.w}x${run.h}-${name}.png`), Buffer.from(shot.data, 'base64'));
+    if (name === 'bag') { await evaluate(`${HELPERS} await c('[data-action="bag"]'); true;`); continue; }
+    if (name === 'bag-spot') { await evaluate(`${HELPERS} await c('[data-action="bag-spot"]'); await c('[data-action="continue"]'); true;`); continue; }
+    await evaluate(`${HELPERS}
+      if (document.querySelector('[data-action="open"]')) await c('[data-action="open"]');
+      await c('[data-action="select"][data-id="${id}"]'); await c('[data-action="confirm"]');
+      if ('${name}' !== 'valve' && '${name}' !== 'shelter') { await w(2300); if (document.querySelector('[data-action="continue"]')) await c('[data-action="continue"]'); }
+      if ('${name}' === 'valve') { await w(900); await c('[data-action="continue"]'); }
+      true;`);
+  }
+  await sleep(1500);
+  const shot = await send('Page.captureScreenshot', { format: 'png' });
+  writeFileSync(join(outDir, `${label}-tour-${run.w}x${run.h}-end.png`), Buffer.from(shot.data, 'base64'));
+  console.log('tour done', run.w, run.h);
+}
+if (process.env.TOUR) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    for (const size of process.env.TOUR.split(',')) {
+      const [w, h] = size.split('x').map(Number);
+      await tour({ w, h, mobile: w < 700, reduce: Boolean(process.env.REDUCE) });
+    }
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
 
 const report = {};
 try {

@@ -1506,3 +1506,161 @@
     opacity: 0;
   }
 }
+
+/* =====================================================================
+   Active-device marker and crew spots (14 Nov fit pass).
+   Active: two-ring outline on the device + a pointer with a tail + ink label.
+   Finished: teal label with a check mark. Focus: the white/ink focus ring above.
+   ===================================================================== */
+.scene {
+  /* No wide glow. The mark sits on the device itself. */
+  .dev.is-active {
+    filter: none;
+  }
+
+  .hot.is-active {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    animation: none;
+  }
+
+  .hot__ring {
+    position: absolute;
+    inset: -3px;
+    display: none;
+    border: 3px solid var(--sun);
+    border-radius: var(--radius);
+    box-shadow:
+      0 0 0 3px var(--ink),
+      inset 0 0 0 2px var(--ink);
+    pointer-events: none;
+  }
+
+  .hot.is-active .hot__ring {
+    display: block;
+    animation: sc-ring 1.6s ease-in-out infinite;
+  }
+
+  /* Pointer: a dark bubble just above the device with a tail touching it. */
+  .hot__cue {
+    top: auto;
+    bottom: calc(100% + 10px);
+    translate: -50% 0;
+    border: 2px solid var(--sun);
+    background: var(--ink);
+    color: var(--sun);
+    font-size: clamp(11px, 1.7cqi, 17px);
+    box-shadow: 0 3px 0 rgb(11 23 48 / 0.35);
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 100%;
+      translate: -50% 0;
+      border: 7px solid transparent;
+      border-top-color: var(--sun);
+    }
+  }
+
+  /* The antenna sits at the top edge: point at it from the right. */
+  .hot[data-device='antenna'] .hot__cue {
+    top: 50%;
+    bottom: auto;
+    left: calc(100% + 12px);
+    translate: 0 -50%;
+
+    &::after {
+      left: auto;
+      right: 100%;
+      top: 50%;
+      translate: 0 -50%;
+      border-top-color: transparent;
+      border-right-color: var(--sun);
+    }
+  }
+
+  .hot__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2em;
+  }
+
+  .hot.is-active .hot__chip {
+    border-color: var(--sun);
+    background: var(--ink);
+    color: var(--card);
+    font-size: clamp(10px, 1.6cqi, 16px);
+  }
+
+  .hot__done {
+    display: none;
+    width: 1em;
+    height: 1em;
+    color: var(--teal);
+  }
+
+  .hot.is-done .hot__chip {
+    border-color: var(--teal);
+    background: var(--teal-soft);
+  }
+
+  .hot.is-done .hot__done {
+    display: inline-block;
+  }
+
+  /* Crew: placed by updateScene beside the active device, partner in another room. */
+  .scene__crew,
+  .scene__crew.scene__crew--girl,
+  .scene__crew.scene__crew--boy {
+    left: var(--crew-x, var(--sc-crew-x));
+    top: var(--crew-y, var(--sc-crew-y));
+    margin-left: 0;
+  }
+
+  .scene__crew[data-lead='false'] {
+    opacity: 0.92;
+  }
+
+  /* The change just made, pinned above the device used. */
+  .scene__note--delta {
+    translate: -50% -60%;
+    border-color: var(--ink);
+    background: var(--sun);
+    font-size: clamp(11px, 1.8cqi, 18px);
+  }
+
+  &[data-delta='1'] .scene__note--delta {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes sc-ring {
+  50% {
+    scale: 1.05;
+  }
+}
+
+.scene {
+  /* The delta note must sit above the hotspot ring it points at. */
+  .scene__notes {
+    z-index: 4;
+  }
+
+  .scene__note--delta {
+    translate: -50% -135%;
+  }
+
+  /* Small scenes (phones): only the active and finished devices keep a label, so labels never overlap. */
+  @container (max-width: 520px) {
+    .hot:not(.is-active, .is-done) .hot__chip {
+      display: none;
+    }
+
+    .hot__cue {
+      font-size: 12px;
+    }
+  }
+}

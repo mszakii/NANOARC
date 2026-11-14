@@ -418,22 +418,15 @@
     padding: 8px;
   }
 
-  /* Restart floats over the top-right of the scene so the tray keeps its height. */
+  /* Restart moves under the mission panel: rare, still one short scroll away,
+     and the scene stays fully visible. */
   .tray-top {
-    position: absolute;
-    inset: 12px 12px auto auto;
-    z-index: 3;
+    order: 99;
+    justify-content: center;
+    padding-top: 4px;
 
     & .brand {
       display: none;
-    }
-
-    & .btn {
-      min-height: var(--tap);
-      padding: 4px 10px;
-      border-color: var(--line);
-      background: rgb(255 245 229 / 0.94);
-      font-size: 13px;
     }
   }
 

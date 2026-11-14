@@ -34,8 +34,8 @@ const HOTSPOTS = [
   { id: 'bag', label: 'Supply bag', box: [584, 226, 160, 150] },
   { id: 'bag-spot', label: 'Bag spot', box: [790, 314, 148, 150] },
   { id: 'shelter', label: 'Shelter', box: [940, 240, 140, 224] },
-  { id: 'valve', label: 'Heat valve', box: [126, 556, 160, 170] },
-  { id: 'oxygen', label: 'Oxygen', box: [468, 540, 160, 226] },
+  { id: 'valve', label: 'Heat valve', box: [142, 566, 128, 136] },
+  { id: 'oxygen', label: 'Oxygen', box: [474, 540, 148, 226] },
   { id: 'recycler', label: 'Recycler', box: [780, 590, 150, 176] },
   { id: 'printer', label: '3D printer', box: [934, 590, 148, 176] },
 ];
@@ -45,6 +45,20 @@ const TOYS = [
   { id: 'earth', label: 'Earth', box: [50, 30, 150, 150] },
   { id: 'rover', label: 'Moon rover', box: [975, 786, 150, 108] },
 ];
+
+// Crew floor spots in SVG units [x, y]: y is the floor line under their feet.
+// Each spot keeps the active device, its label chip and its click area clear.
+const LEAD_SPOT = {
+  greenhouse: [456, 452],
+  quarters: [740, 452],
+  power: [304, 752],
+  life: [648, 752],
+  water: [1046, 752],
+  roof: [600, 182],
+};
+const WATER_SPOT_FOR = { recycler: [1046, 752], printer: [846, 752] };
+const PARTNER_SPOT = [740, 452];
+const PARTNER_ALT_SPOT = [456, 452];
 
 const STARS = [
   [36, 44, 3], [232, 30, 2], [286, 96, 3], [22, 210, 2], [58, 330, 3], [30, 470, 2], [70, 560, 2],
@@ -382,8 +396,9 @@ function hotspotMarkup() {
   const devices = HOTSPOTS.map(
     (h) => `
     <button type="button" class="hot" data-device="${h.id}" tabindex="-1" aria-label="${h.label}" style="${percentBox(h.box)}">
-      <span class="hot__cue" aria-hidden="true">${TAP_ICON}Tap!</span>
-      <span class="hot__chip" aria-hidden="true">${h.label}</span>
+      <span class="hot__ring" aria-hidden="true"></span>
+      <span class="hot__cue" aria-hidden="true">${TAP_ICON}Tap</span>
+      <span class="hot__chip" aria-hidden="true"><svg class="hot__done" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${h.label}</span>
     </button>`,
   ).join('');
   const toys = TOYS.map(
@@ -392,9 +407,74 @@ function hotspotMarkup() {
   return devices + toys;
 }
 
-/** The one mounted scene: { root, buttons: Map<id, button>, groups: Map<id, SVGGElement> }. */
+/** The one mounted scene: { root, buttons, groups, crew, delta }. */
 let scene = null;
 let activeId = null;
+/** The last committed decision already reacted to, so each confirm animates once. */
+let lastSeen = null;
+
+const idx = (step) => STEP_ORDER.indexOf(step);
+const reduceMotion = () => Boolean(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+
+/** Which devices are finished, for the check-mark state. Story only; training only repairs. */
+function doneDevices(state) {
+  if (!state) return new Set();
+  const at = idx(state.step);
+  const f = state.flags;
+  const done = new Set();
+  if (f.recycler) done.add('recycler');
+  if (state.mode === 'practice') return done;
+  if (at > idx('greenhouse')) done.add('greenhouse');
+  if (f.valve && at > idx('valve')) done.add('valve');
+  if (f.shelter && at > idx('shelter')) done.add('shelter');
+  if (at > idx('oxygen')) done.add('oxygen');
+  if (at > idx('plastic')) done.add('printer');
+  if (f.sent) done.add('antenna');
+  return done;
+}
+
+const pctX = (x) => `${Math.round((x / 1200) * 10000) / 100}%`;
+const pctY = (y) => `${Math.round((y / 900) * 10000) / 100}%`;
+
+/** Speaker beside the active device, partner waiting in another room; together on the roof at sunrise. */
+function crewSpots(state, v, active, room) {
+  if (!state || (v.screen !== 'play' && v.screen !== 'end')) return { girl: [709, 452], boy: [771, 452] };
+  if (room === 'roof') return { girl: [572, 182], boy: [636, 182] };
+  const device = active ?? DEVICE_FOR_STEP[state.step];
+  const lead = room === 'water' ? WATER_SPOT_FOR[device] ?? LEAD_SPOT.water : LEAD_SPOT[room] ?? PARTNER_SPOT;
+  const partner = room === 'quarters' ? PARTNER_ALT_SPOT : PARTNER_SPOT;
+  return v.speaker === 'boy' ? { girl: partner, boy: lead } : { girl: lead, boy: partner };
+}
+
+const DELTA_LABEL = { power: 'Power', water: 'Water', warmth: 'Warmth', oxygen: 'Oxygen', reserve: 'Reserve', meals: 'Meals', readyMeals: 'Ready meal' };
+const DELTA_ORDER = ['warmth', 'power', 'water', 'reserve', 'oxygen', 'meals', 'readyMeals'];
+
+/** One short line for the change the player just made, e.g. "Warmth 1 → 2". */
+function deltaText(last) {
+  if (!last?.before || !last?.after) return '';
+  const key = DELTA_ORDER.find((k) => last.after[k] !== last.before[k]);
+  return key ? `${DELTA_LABEL[key]} ${last.before[key]} → ${last.after[key]}` : '';
+}
+
+function play(el, frames, options) {
+  if (!el || typeof el.animate !== 'function' || reduceMotion()) return;
+  el.animate(frames, options);
+}
+
+/** Short reactions tied to what the player just confirmed. The outcome is already drawn by data-*. */
+function react(state, v) {
+  const last = state?.last;
+  if (!last || last === lastSeen || state.phase === 'choose') return;
+  lastSeen = last;
+  const device = scene.groups.get(DEVICE_FOR_STEP[last.step]);
+  const lead = scene.crew[v.speaker === 'boy' ? 'boy' : 'girl'];
+  if (state.phase === 'recovery') {
+    play(lead, [{ translate: '-50% -100%' }, { translate: 'calc(-50% - 4px) -100%' }, { translate: 'calc(-50% + 4px) -100%' }, { translate: '-50% -100%' }], { duration: 360, iterations: 2 });
+    return;
+  }
+  play(device, [{ scale: '1' }, { scale: '1.08' }, { scale: '1' }], { duration: 520, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+  play(lead, [{ translate: '-50% -100%' }, { translate: '-50% -112%' }, { translate: '-50% -100%' }], { duration: 480, delay: 160, easing: 'ease-out' });
+}
 
 function bounce(el) {
   if (!el || typeof el.animate !== 'function') return;
@@ -422,6 +502,7 @@ export function mountScene(root, { onDevice } = {}) {
         <span class="scene__note scene__note--alert">Storm alert!</span>
         <span class="scene__note scene__note--charge">Panels charging</span>
         <span class="scene__note scene__note--signal">about 1.3 s</span>
+        <span class="scene__note scene__note--delta"></span>
       </div>
       <div class="scene__hotspots">${hotspotMarkup()}</div>
     </div>`;
@@ -430,8 +511,12 @@ export function mountScene(root, { onDevice } = {}) {
   const groups = new Map();
   for (const btn of root.querySelectorAll('.hot')) buttons.set(btn.dataset.device ?? btn.dataset.toy, btn);
   for (const g of root.querySelectorAll('[data-dev]')) groups.set(g.dataset.dev, g);
-  scene = { root, buttons, groups };
+  scene = { root, buttons, groups, crew: {
+    girl: root.querySelector('.scene__crew--girl'),
+    boy: root.querySelector('.scene__crew--boy'),
+  }, delta: root.querySelector('.scene__note--delta') };
   activeId = null;
+  lastSeen = null;
 
   root.querySelector('.scene__hotspots').addEventListener('click', (event) => {
     const btn = event.target.closest('.hot');
@@ -529,10 +614,46 @@ export function updateScene(state, view) {
     sent: flags.sent ? 1 : 0,
   };
 
+  data.phase = state?.phase ?? 'none';
+  const showDelta = playing && state.phase === 'result' && typeof v.seq !== 'number' && Boolean(state.last);
+  const delta = showDelta ? deltaText(state.last) : '';
+  data.delta = delta ? 1 : 0;
+
   const { dataset } = scene.root;
   for (const [key, value] of Object.entries(data)) {
     const text = String(value);
     if (dataset[key] !== text) dataset[key] = text;
   }
   setActive(active);
+
+  // Crew spots, as inline custom properties the CSS transitions between.
+  const spots = crewSpots(state, v, active, crewRoom);
+  for (const who of ['girl', 'boy']) {
+    const [x, y] = spots[who];
+    const el = scene.crew[who];
+    if (!el) continue;
+    el.style.setProperty('--crew-x', pctX(x));
+    el.style.setProperty('--crew-y', pctY(y));
+    el.dataset.lead = String(playing && (v.speaker === 'boy') === (who === 'boy'));
+  }
+
+  // Finished devices keep a check mark; active and finished never share a look.
+  const done = doneDevices(state);
+  for (const [id, btn] of scene.buttons) {
+    if (!btn.dataset.device) continue;
+    btn.classList.toggle('is-done', done.has(id) && id !== active);
+  }
+
+  // The change the player just made, pinned above the device they used.
+  if (scene.delta) {
+    const spot = HOTSPOTS.find((h) => h.id === DEVICE_FOR_STEP[state?.last?.step]);
+    if (delta && spot) {
+      const [x, y, w] = spot.box;
+      scene.delta.textContent = delta;
+      scene.delta.style.left = pctX(x + w / 2);
+      scene.delta.style.top = pctY(Math.max(y, 60));
+    }
+  }
+
+  if (playing) react(state, v);
 }

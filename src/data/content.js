@@ -30,7 +30,7 @@ export const UI = {
   budgetOver: (over) => `That is ${over} credits too many. Take one item out. Then you can launch.`,
   launch: 'Launch Mission',
 
-  tapHint: 'You can also tap the glowing spot in the base.',
+  tapHint: 'You can also tap the marked device in the base.',
   choicesLabel: 'Your choices',
   picked: 'Picked',
   locked: 'Not ready',
