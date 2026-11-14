@@ -16,7 +16,7 @@ mkdirSync(outDir, { recursive: true });
 const profile = mkdtempSync(join(tmpdir(), 'qs-chrome-'));
 const chrome = spawn(CHROME, [
   '--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
-  '--no-first-run', '--no-default-browser-check', '--hide-scrollbars', 'about:blank',
+  '--no-first-run', '--no-default-browser-check', '--hide-scrollbars', '--autoplay-policy=user-gesture-required', 'about:blank',
 ], { stdio: 'ignore' });
 
 async function connect() {
@@ -364,7 +364,8 @@ async function audioRun() {
   await clickReal('[data-action="start"]');
   out.push('muted Start click logged: ' + (await log()));
   await clickReal('[data-action="sound"]');
-  out.push('after toggle: ' + (await label()) + ' log ' + (await log()));
+  await sleep(300);
+  out.push('after toggle: ' + (await label()) + ' log ' + (await log()) + ' audio engine ' + (await evaluate(`globalThis.__qsSfxState()`)));
   await clickReal('[data-action="launch"]');
   await clickReal('[data-action="open"]');
   await clickReal('[data-action="select"][data-id="save_power"]');
@@ -415,7 +416,7 @@ async function audioRun() {
   await clickReal('[data-action="sound"]');
   await evaluate(`globalThis.__qsSfx.length = 0; true`);
   await clickReal('[data-action="continue"]');
-  out.push('muted again: ' + (await label()) + ', Continue logged ' + (await log()));
+  out.push('muted again: ' + (await label()) + ', Continue logged ' + (await log()) + ', engine ' + (await evaluate(`globalThis.__qsSfxState()`)));
   out.push('final: ' + (await evaluate(`document.querySelector('.final-line')?.textContent.trim()`)));
   console.log(out.join(String.fromCharCode(10)));
 }

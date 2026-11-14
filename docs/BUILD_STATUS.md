@@ -30,6 +30,16 @@
 
 Audio checks confirm which effects started (the page's `__qsSfx` log); headless Chrome has no speakers, so **how they sound was not heard** — Ahmed's phone check below.
 
+### Fix: sound effects were inaudible (reported 14 Nov)
+
+**Cause:** the effects did play, but far too quietly. Measured offline through the real synth chain (`measureSound()` in `src/ui/sound.js`, rendered with `OfflineAudioContext`): click peak **−40 dBFS**, relay −30, valve −28, drop −23. Narrow band-pass filters (Q 3–7) on the noise removed most of the energy, and low gains followed. The audio engine itself was fine.
+
+**Fix:** wider filters, a short tonal body under each tick, master gain 0.9 into a limiter (threshold −6 dB) so overlaps cannot clip. New peaks: **click −15.3 dBFS** (still the quietest), drop −9.2, relay −6.7, valve −6.4; RMS −22 to −32 dB. Durations 41–576 ms, still no music or loops.
+
+**Re-checked:** headless Chrome with `--autoplay-policy=user-gesture-required` (the normal browser rule): after a real click on **Sound Effects: Off**, the engine state is **running**, one click logs; Confirm ×3 → one `valve`; repair → two `drop`; Send Now → one `relay`; muting suspends the engine; story ends on the final line. Same at 375×812. `npm test` 31/31, `npm run build` pass.
+
+To re-measure levels: run `npm run dev`, open the game, and in the browser console run `const m = await import('/src/ui/sound.js'); for (const n of m.SOUND_NAMES) console.log(await m.measureSound(n));`.
+
 ## UI pass (14 Nov) — fit, marker, icons, motion
 
 | Commit | What changed |
