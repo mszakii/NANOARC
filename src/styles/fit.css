@@ -762,3 +762,79 @@
 .tray-top:not(.tray-top--plain) {
   justify-content: flex-end;
 }
+
+/* ---------- Nanotechnology Lab: zoom on the membrane ---------- */
+.mb-figures {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 520px) {
+  .mb-figures {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.mb-figure .mb-lens {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-dasharray: 4 3;
+}
+
+.mb-zoom {
+  margin: 0;
+
+  & svg {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  & figcaption {
+    font-size: 13px;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+
+  & .mbz-warm { fill: #fde9c4; }
+  & .mbz-cool { fill: #e3f1fb; }
+  & .mbz-material { fill: #bfe3de; }
+  & .mbz-pore { fill: #f4fbfa; stroke: var(--teal); stroke-width: 1.5; }
+  & .mbz-silica { fill: var(--ink); stroke: var(--card); stroke-width: 1.2; }
+  & .mbz-vapor { fill: var(--card); stroke: var(--sky-blue); stroke-width: 2.5; }
+  & .mbz-flow { fill: none; stroke: var(--teal); stroke-width: 3; stroke-linecap: round; }
+  & .mbz-flow-head { fill: none; stroke: var(--teal); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  & .mbz-ring { fill: none; stroke: var(--ink); stroke-width: 4; }
+  & .mbz-leader { fill: none; stroke: var(--ink); stroke-width: 1.8; }
+  & .mbz-mark { fill: none; stroke: var(--coral); stroke-width: 2.5; }
+  & .mbz-label { font: 800 13px var(--font); fill: var(--ink); }
+}
+
+/* While the test runs, vapor in the zoom drifts through the pores. Reduced motion keeps it still. */
+.membrane[data-stage='running'] .mbz-vapor {
+  animation: mbz-drift 1.6s ease-in-out calc(var(--i) * 0.2s) infinite alternate;
+}
+
+@keyframes mbz-drift {
+  to { translate: 10px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .membrane .mbz-vapor {
+    animation: none !important;
+  }
+}
+
+/* The lab needs room for the figure and the zoom side by side. */
+.dlg-science:has(.membrane) {
+  width: min(720px, calc(100vw - 24px));
+}
+
+.mb-zoom .mbz-label {
+  font-size: 15px;
+}

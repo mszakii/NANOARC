@@ -45,6 +45,7 @@ function figure() {
       <path class="mb-heat" d="M40 150q-6 8 0 16M66 150q-6 8 0 16M92 150q-6 8 0 16"/>
       <rect class="mb-membrane" x="146" y="30" width="18" height="112" rx="5"/>
       ${pores}
+      <circle class="mb-lens" cx="155" cy="86" r="16"/>
       <rect class="mb-tank mb-cool" x="168" y="30" width="136" height="112" rx="14"/>
       <rect class="mb-plate" x="290" y="38" width="8" height="96" rx="4"/>
       <g class="mb-vapors">${vapor}</g>
@@ -56,6 +57,45 @@ function figure() {
       <text class="mb-label" x="155" y="160" text-anchor="middle">${esc(NOTEBOOK.membraneLabel)}</text>
       <text class="mb-label" x="236" y="22" text-anchor="middle">${esc(NOTEBOOK.coolLabel)}</text>
     </svg>`;
+}
+
+/**
+ * Zoom-in beside the membrane: silica nanoparticles (dark dots) held in the membrane material,
+ * water vapor (light bubbles) passing through the pores. Static, so it stays with reduced motion.
+ */
+function zoom() {
+  const pores = [40, 82, 124, 166];
+  const silica = [
+    [86, 26], [104, 34], [94, 58], [112, 66], [84, 100], [106, 104], [96, 138], [114, 146], [88, 178], [106, 186],
+    [100, 18], [92, 116], [110, 122], [98, 160],
+  ];
+  const vapor = [[52, 46], [64, 90], [100, pores[1] + 6], [100, pores[2] + 6], [140, 50], [154, 132], [48, 150]];
+  return `
+    <figure class="mb-zoom">
+      <svg viewBox="0 0 320 210" role="img" aria-labelledby="mb-zoom-title">
+        <title id="mb-zoom-title">${esc(NOTEBOOK.zoomAlt)}</title>
+        <defs><clipPath id="mb-lens"><circle cx="100" cy="104" r="94"/></clipPath></defs>
+        <g clip-path="url(#mb-lens)">
+          <rect x="0" y="0" width="80" height="210" class="mbz-warm"/>
+          <rect x="120" y="0" width="100" height="210" class="mbz-cool"/>
+          <rect x="78" y="0" width="44" height="210" class="mbz-material"/>
+          ${pores.map((y) => `<rect x="78" y="${y}" width="44" height="13" rx="6" class="mbz-pore"/>`).join('')}
+          ${silica.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.2" class="mbz-silica"/>`).join('')}
+          ${vapor.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="5.5" class="mbz-vapor" style="--i:${i}"/>`).join('')}
+          <path class="mbz-flow" d="M30 118h38M132 70h38M132 166h38"/>
+          <path class="mbz-flow-head" d="M64 113l6 5-6 5M166 65l6 5-6 5M166 161l6 5-6 5"/>
+        </g>
+        <circle cx="100" cy="104" r="94" class="mbz-ring"/>
+        <path class="mbz-leader" d="M110 66L214 54"/>
+        <circle cx="110" cy="66" r="6.5" class="mbz-mark"/>
+        <text x="218" y="50" class="mbz-label">${esc(NOTEBOOK.silicaLabel.split(' ')[0])}</text>
+        <text x="218" y="64" class="mbz-label">${esc(NOTEBOOK.silicaLabel.split(' ').slice(1).join(' '))}</text>
+        <path class="mbz-leader" d="M154 132L214 142"/>
+        <circle cx="154" cy="132" r="8" class="mbz-mark"/>
+        <text x="218" y="146" class="mbz-label">${esc(NOTEBOOK.vaporLabel)}</text>
+      </svg>
+      <figcaption>${esc(NOTEBOOK.zoomTitle)}. <em>${esc(NOTEBOOK.zoomNote)}</em></figcaption>
+    </figure>`;
 }
 
 /** The experiment block inside the Notebook dialog. */
@@ -72,7 +112,10 @@ export function membraneHtml() {
   return `
     <section class="membrane" data-stage="${stage}" aria-labelledby="mb-title">
       <h4 id="mb-title">${icon('science')} ${esc(NOTEBOOK.title)}</h4>
-      ${figure()}
+      <div class="mb-figures">
+        ${figure()}
+        ${zoom()}
+      </div>
       <ol class="mb-steps">
         ${NOTEBOOK.steps.map((s, i) => `<li class="${i < NOTEBOOK.stepIndex[stage] ? 'is-done' : i === NOTEBOOK.stepIndex[stage] ? 'is-now' : ''}">${esc(s)}</li>`).join('')}
       </ol>

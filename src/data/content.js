@@ -366,7 +366,12 @@ export const RECOVERY = {
 
 /** Notebook experiment "Test the Membrane". Short labels for ages 7 to 12. */
 export const NOTEBOOK = {
-  title: 'Test the Membrane',
+  title: 'Run the test',
+  zoomTitle: 'Zoom in on the membrane',
+  zoomNote: 'Illustration, not to scale.',
+  silicaLabel: 'Silica nanoparticles',
+  vaporLabel: 'Water vapor',
+  zoomAlt: 'Zoomed-in membrane: dark dots are silica nanoparticles held in the membrane material. Small water vapor bubbles pass through the tiny holes from the warm side to the cool side.',
   warmLabel: 'Warm used water',
   membraneLabel: 'Membrane',
   coolLabel: 'Cool side',
@@ -484,12 +489,12 @@ export const SCIENCE = {
     ],
   },
   notebook: {
-    title: 'Notebook: Test the Membrane',
+    title: 'Nanotechnology Lab: Test the Membrane',
     // Video slot: notebook. The experiment below (text + simple drawing) stands in for the optional clip.
     experiment: 'membrane',
     body: [
-      'Lab research example. Scientists on Earth tested a way to clean used water, like the urine a space station recycles. It is called membrane distillation.',
-      'A membrane is a thin sheet full of tiny holes, much thinner than a hair. Making materials with holes this small is part of nanotechnology. Warm water gives off vapor. The vapor passes through the holes. Most of the dirty stuff stays behind.',
+      'Lab research example. Scientists on Earth tested a way to get water back from used water, like the urine a space station recycles.',
+      'This research membrane contains tiny silica particles called nanoparticles. Water vapor passes through the membrane and cools into drops. Most of the dirty stuff stays behind.',
     ],
     links: [{ label: 'Khumalo et al. (2019), laboratory membrane distillation study', href: 'https://doi.org/10.1016/j.seppur.2018.10.035' }],
     teaching: 'Lab research example, not to scale. The Test Sample is not drinking water. It does not change the crew’s bottles. The station’s own recycling is in Compare ISS Recovery.',

@@ -16,6 +16,11 @@ test('notebook is a membrane lab example that cites the membrane distillation st
   assert.ok(topic.links.some((l) => l.href === 'https://doi.org/10.1016/j.seppur.2018.10.035'));
   assert.match(topic.body.join(' '), /Lab research example/);
   assert.match(topic.teaching, /not drinking water/);
+  assert.equal(topic.title, 'Nanotechnology Lab: Test the Membrane');
+  assert.match(topic.body.join(' '), /This research membrane contains tiny silica particles called nanoparticles\. Water vapor passes through the membrane and cools into drops\./);
+  resetMembrane();
+  const html = membraneHtml();
+  for (const label of ['Silica', 'nanoparticles', 'Water vapor', 'Illustration, not to scale.', 'TEST SAMPLE']) assert.ok(html.includes(label), label);
   // The historical ISS comparison stays its own activity.
   assert.equal(SCIENCE.iss.compare, true);
   assert.equal(SCIENCE.notebook.compare, undefined);

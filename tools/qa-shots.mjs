@@ -130,10 +130,15 @@ const RUNS = [
   { name: 'valve-closed-375x812', w: 375, h: 812, mobile: true, scenario: 'valveClosed' },
 ];
 
-if (process.env.JOURNEY) RUNS.splice(0, RUNS.length,
-  { name: 'journey-1366x768', w: 1366, h: 768, mobile: false, scenario: 'journey' },
-  { name: 'journey-1920x1080', w: 1920, h: 1080, mobile: false, scenario: 'journey' },
-  { name: 'journey-375x812', w: 375, h: 812, mobile: true, scenario: 'journey' });
+// JOURNEY=1 uses the default sizes; JOURNEY=360x800,375x664 measures those sizes instead.
+// Phone heights with browser bars visible: about 360x692 (Chrome, Android) and 375x664 (Safari, iPhone).
+if (process.env.JOURNEY) {
+  const sizes = process.env.JOURNEY === '1' ? '1366x768,1920x1080,375x812' : process.env.JOURNEY;
+  RUNS.splice(0, RUNS.length, ...sizes.split(',').map((size) => {
+    const [w, h] = size.split('x').map(Number);
+    return { name: `journey-${size}`, w, h, mobile: w < 700, scenario: 'journey' };
+  }));
+}
 
 // Tour: screenshot each active device before it is opened, then make a choice and move on.
 const TOUR = [
