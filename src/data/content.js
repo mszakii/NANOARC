@@ -64,7 +64,7 @@ export const UI = {
   bagStep2: 'The bag is in place. The shelter is ready.',
   bagPick: 'Pick Up the Supply Bag',
   bagPlace: 'Put the Bag on the Marked Spot',
-  bagWait: 'Place the supply bag first.',
+  bagWait: 'Place the supply bag. Then you can continue.',
 
   turnOf: (n, total) => `Turn ${n} of ${total}`,
   turnBottles: (n) => `${plural(n, 'bottle', 'bottles')} left`,
@@ -95,6 +95,10 @@ export const UI = {
 
   compareIss: 'Compare ISS Recovery',
   notebook: 'Open Notebook',
+  menu: 'Menu',
+  menuTitle: 'Mission menu',
+  menuClose: 'Close',
+  scienceShort: 'Science',
   soundOn: 'Sound Effects: On',
   soundOff: 'Sound Effects: Off',
   soundNone: 'Sound Effects: not available',

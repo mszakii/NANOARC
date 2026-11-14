@@ -426,6 +426,44 @@ async function audioRun() {
   console.log(out.join(String.fromCharCode(10)));
 }
 
+// Phone Menu: keyboard open, sound toggle inside, Restart from the menu, focus return.
+async function menuRun() {
+  await send('Emulation.setDeviceMetricsOverride', { width: 375, height: 664, deviceScaleFactor: 1, mobile: true });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  const q = (expr) => evaluate(expr);
+  const out = [];
+  await evaluate(`${HELPERS} await c('[data-action="start"]'); await c('[data-action="launch"]'); true;`);
+  out.push('tray header hidden: ' + (await q(`getComputedStyle(document.querySelector('.tray-top')).display`)) + ', Menu visible: ' + (await q(`getComputedStyle(document.querySelector('[data-action="tools"]')).display`)) + ', Science label: "' + (await q(`document.querySelector('.btn-science').innerText.trim()`)) + '" name "' + (await q(`document.querySelector('.btn-science').getAttribute('aria-label')`)) + '"');
+  await q(`document.querySelector('[data-action="tools"]').focus(); true`);
+  await key('Enter');
+  out.push('Enter on Menu -> dialog open ' + (await q(`document.querySelector('#tools-dialog').open`)) + ', focus "' + (await q(`document.activeElement.textContent.trim()`)) + '"');
+  await key('Enter');
+  out.push('Enter on sound -> "' + (await q(`document.activeElement.textContent.trim()`)) + '" aria-pressed ' + (await q(`document.activeElement.getAttribute('aria-pressed')`)));
+  await key('Enter');
+  out.push('Enter again -> "' + (await q(`document.activeElement.textContent.trim()`)) + '"');
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await sleep(400);
+  out.push('Escape -> open ' + (await q(`document.querySelector('#tools-dialog').open`)) + ', focus on ' + (await q(`document.activeElement.dataset.action`)));
+  await key('Enter');
+  await q(`document.querySelector('#tools-body [data-action="restart-ask"]').focus(); true`);
+  await key('Enter');
+  out.push('Restart from menu -> tools open ' + (await q(`document.querySelector('#tools-dialog').open`)) + ', restart dialog open ' + (await q(`document.querySelector('#restart-dialog').open`)));
+  console.log(out.join(String.fromCharCode(10)));
+}
+if (process.env.MENU) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    await menuRun();
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
 if (process.env.NOTEBOOK || process.env.AUDIO) {
   try {
     await send('Page.enable');

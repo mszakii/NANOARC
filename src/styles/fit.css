@@ -838,3 +838,112 @@
 .mb-zoom .mbz-label {
   font-size: 15px;
 }
+
+/* ---------- Phone fit: compact Menu for secondary tools ---------- */
+.btn-menu,
+.lbl-narrow {
+  display: none;
+}
+
+.panel-tools {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.tools-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  & .btn {
+    width: 100%;
+    min-height: 52px;
+  }
+}
+
+@media (max-width: 760px), (orientation: portrait) {
+  /* Sound and Restart live in the Menu; the tray keeps only what the decision needs. */
+  .tray-top:not(.tray-top--plain) {
+    display: none;
+  }
+
+  .btn-menu {
+    display: inline-flex;
+  }
+
+  .lbl-wide {
+    display: none;
+  }
+
+  .lbl-narrow {
+    display: inline;
+  }
+
+  .panel-tools .btn {
+    min-height: var(--tap);
+    padding-inline: 9px;
+  }
+
+  /* While choosing, the crew line repeats what the player just read (and the HUD shows the numbers). */
+  .panel[data-phase='choose'] .talk:has(~ .opts) {
+    display: none;
+  }
+}
+
+/* Short portrait screens (browser bars visible): a slightly smaller scene. */
+@media (orientation: portrait) and (max-height: 720px) {
+  .stage {
+    max-height: 29dvh;
+  }
+}
+
+/* Short portrait screens: tighter spacing before any smaller text or targets. */
+@media (orientation: portrait) and (max-height: 720px) {
+  .tray-body {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .panel {
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .panel-main,
+  .panel-foot {
+    gap: 6px;
+  }
+
+  .hud {
+    gap: 3px;
+  }
+
+  .ctr {
+    padding: 2px 5px;
+  }
+
+  .slot {
+    min-height: 44px;
+    padding: 3px 10px;
+  }
+
+  .preview-hint {
+    line-height: 1.2;
+  }
+
+  .opt {
+    min-height: 52px;
+    padding-block: 4px;
+  }
+
+  .opt-why {
+    padding-block: 2px;
+    line-height: 1.2;
+  }
+
+  .task {
+    padding: 6px 10px;
+  }
+}

@@ -120,6 +120,7 @@ function resultPhase(state, step, view) {
     const stage = view.bagStage;
     if (stage < 2) {
       const lead = UI.bagLead[last.option] ?? UI.bagTitle;
+      // The bag action takes the main button's place; Continue appears there once the bag is placed.
       return {
         main: `
           ${talk(step, 'determined', lead, false)}
@@ -129,10 +130,12 @@ function resultPhase(state, step, view) {
               <li class="${stage === 0 ? 'is-now' : 'is-done'}">${icon(stage === 0 ? 'tap' : 'check')} ${esc(UI.bagStep0)}</li>
               <li class="${stage === 1 ? 'is-now' : ''}">${icon(stage === 1 ? 'tap' : 'pin')} ${esc(UI.bagStep1)}</li>
             </ol>
-          </div>
-          <button type="button" class="btn btn-big btn-toy" data-action="${stage === 0 ? 'bag' : 'bag-spot'}" data-primary>
+          </div>`,
+        foot: foot(
+          hintSlot('bag-why', UI.bagWait),
+          `<button type="button" class="btn btn-big btn-primary" data-action="${stage === 0 ? 'bag' : 'bag-spot'}" data-primary>
             ${icon(stage === 0 ? 'bag' : 'pin')} ${esc(stage === 0 ? UI.bagPick : UI.bagPlace)}</button>`,
-        foot: continueFoot(false, UI.bagWait),
+        ),
       };
     }
     return { main: `${talk(step, 'happy', UI.bagStep2, false)}${resultBody(state, true)}`, foot: continueFoot(true) };
@@ -200,7 +203,10 @@ export function renderPanel(state, view, opts) {
           <p class="eyebrow">${esc(step.eyebrow)}</p>
           <h2 id="crisis-name" class="card-title">${esc(step.crisis)}</h2>
         </div>
-        <button type="button" class="btn btn-quiet btn-small btn-science" data-action="science" data-id="${esc(step.science)}">${icon('science')} <span>${esc(UI.science)}</span></button>
+        <div class="panel-tools">
+          <button type="button" class="btn btn-quiet btn-small btn-science" data-action="science" data-id="${esc(step.science)}" aria-label="${esc(UI.science)}">${icon('science')} <span class="lbl-wide">${esc(UI.science)}</span><span class="lbl-narrow">${esc(UI.scienceShort)}</span></button>
+          <button type="button" class="btn btn-quiet btn-small btn-menu" data-action="tools" aria-haspopup="dialog">${icon('menu')} <span>${esc(UI.menu)}</span></button>
+        </div>
       </header>
       <div class="panel-main">${body.main}${extras}</div>
       ${body.foot}

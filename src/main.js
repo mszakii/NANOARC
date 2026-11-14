@@ -38,12 +38,29 @@ app.innerHTML = `
       <button type="button" class="btn btn-quiet" data-action="restart-no" autofocus>${esc(UI.restartNo)}</button>
       <button type="button" class="btn btn-primary" data-action="restart-yes">${esc(UI.restartYes)}</button>
     </div>
+  </dialog>
+  <dialog class="dlg dlg-tools" id="tools-dialog" aria-labelledby="tools-title" closedby="any">
+    <h2 class="dlg-title" id="tools-title">${esc(UI.menuTitle)}</h2>
+    <div class="tools-body" id="tools-body"></div>
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-primary" data-action="tools-close">${esc(UI.menuClose)}</button>
+    </div>
   </dialog>`;
 
 const game = app.querySelector('.game');
 const tray = app.querySelector('#tray');
 const live = app.querySelector('#live');
 const restartDialog = app.querySelector('#restart-dialog');
+const toolsDialog = app.querySelector('#tools-dialog');
+const toolsBody = app.querySelector('#tools-body');
+
+/** Secondary tools for phones: sound and restart (or back to start in training). */
+function toolsHtml() {
+  const practice = state?.mode === 'practice';
+  return `
+    ${soundButton()}
+    <button type="button" class="btn btn-quiet" data-action="${practice ? 'back-start' : 'restart-ask'}">${icon('restart')} ${esc(practice ? UI.backToStart : UI.restart)}</button>`;
+}
 
 mountScene(app.querySelector('#scene'), { onDevice });
 
@@ -109,7 +126,7 @@ function onDevice(id) {
 
 // The main tray button keeps one place across phases (Open, Confirm, Continue, Retry), so a fast
 // double click would land on the next phase's button. Ignore a second one within this window.
-const FOOT_ACTIONS = new Set(['open', 'confirm', 'continue', 'retry']);
+const FOOT_ACTIONS = new Set(['open', 'confirm', 'continue', 'retry', 'bag', 'bag-spot']);
 const FOOT_GUARD_MS = 300;
 let lastFootAt = -Infinity;
 
@@ -139,6 +156,7 @@ function dispatch(action) {
         break;
 
       case 'back-start':
+        if (toolsDialog.open) toolsDialog.close();
         if (state && state.mode !== 'practice') return;
         state = null;
         resetView('start');
@@ -230,7 +248,18 @@ function dispatch(action) {
         break;
       }
 
+      case 'tools':
+        toolsBody.innerHTML = toolsHtml();
+        if (!toolsDialog.open) toolsDialog.showModal();
+        toolsBody.querySelector('[data-action="sound"]')?.focus();
+        return;
+
+      case 'tools-close':
+        toolsDialog.close();
+        return;
+
       case 'restart-ask':
+        if (toolsDialog.open) toolsDialog.close();
         if (!restartDialog.open) restartDialog.showModal();
         return;
 
@@ -367,6 +396,13 @@ function render(focus = null) {
     console.error('[Qamar Square] scene', error);
   }
 
+  // The phone menu shows the same sound state as the tray.
+  if (toolsDialog.open) {
+    const refocus = toolsBody.contains(document.activeElement) ? document.activeElement.dataset.action : null;
+    toolsBody.innerHTML = toolsHtml();
+    if (refocus) toolsBody.querySelector(`[data-action="${refocus}"]`)?.focus();
+  }
+
   live.textContent = tray.querySelector('[data-live]')?.textContent.replace(/\s+/g, ' ').trim() ?? '';
 
   // Keyboard flow: move focus to the primary action of the new tray content.
@@ -378,6 +414,11 @@ function render(focus = null) {
 
 // ---------- Events ----------
 // The tray can re-render while the restart dialog is open, so restore focus by hand if it was lost.
+toolsDialog.addEventListener('close', () => {
+  if (document.querySelector('dialog[open]')) return;
+  (tray.querySelector('[data-action="tools"]') ?? tray.querySelector('[data-primary]'))?.focus();
+});
+
 restartDialog.addEventListener('close', () => {
   if (document.activeElement && document.activeElement !== document.body) return;
   (tray.querySelector('[data-action="restart-ask"]') ?? tray.querySelector('[data-primary]'))?.focus();
