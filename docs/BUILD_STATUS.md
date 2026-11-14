@@ -1,9 +1,32 @@
 # Qamar Square — Build status
 
 **Updated:** 14 November 2026 (Africa/Cairo).
-**Milestone:** review pass complete: Nanotechnology Lab zoom, no-scroll play on desktop and phones (incl. browser bars), input-aware tap marker, star twinkle and lunar flags, sound on by default with a saved choice. Verified in this environment; physical-phone and listening checks remain Ahmed's (see `docs/MANUAL_CHECKS.md`).
-**Latest working revision:** `e255922` plus the status commit after it (review pass: `efaf118`, `f6162ee`, `ccc19d2`, `c781a0c`, `e255922`). Earlier: Notebook/sound `ab3d252`, `9bb1e42`, `66c633d`; UI pass `1590f9c`, `7d45ff1`, `85e9fb2`. All commits are local; nothing was pushed.
+**Milestone:** five-level flow added: Choose Your Astronaut, a cabinet camera per level, Level X of 5 with Next Level, and a sunrise transmitter plan ending with "Will the signal reach Earth?". Verified in this environment; physical-phone and listening checks remain Ahmed's (see `docs/MANUAL_CHECKS.md`).
+**Latest working revision:** `fd9a9c1` (five levels) plus the status commit after it. Earlier: review pass `efaf118`–`1822091`; Notebook/sound `ab3d252`, `9bb1e42`, `66c633d`; UI pass `1590f9c`, `7d45ff1`, `85e9fb2`. All commits are local; nothing was pushed.
 **Integration history:** the scene, scene CSS, ten crew WebPs, crop script and scene preview were committed in `8396e18`; integration in `e51c098`; favicon and reduced-motion record in `8b4fa53`; phone checklist in `3050d01`. No earlier work was discarded.
+
+## Five levels with character choice and a cabinet camera (14 Nov) — `fd9a9c1`
+
+| Area | What changed |
+|---|---|
+| Character choice | Start Mission → **Choose Your Astronaut** (Commander Noor or Engineer Sami, placeholder names in `CREW`) → **Confirm: <name>** → packing. Stored as `state.avatar` by `newRun(ids, avatar)` / `newPractice(withKit, avatar)`; checkpoints keep it. The chosen astronaut is the speaker, the tray portrait and the lead crew sprite in every level. Play Again returns to the choice with the last pick selected. |
+| Levels | Fixed order: 1 Power & Food (greenhouse) → 2 Heat & Shelter (valve, shelter) → 3 Oxygen → 4 Water & Waste (repair, plastic) → 5 Sunrise & Signal (signal, antenna). Panel eyebrow **Level X of 5** (Water Training shows "Water Training"). The result that leaves a level shows **Next Level**; steps inside a level keep **Continue**. Rules helpers: `levelOf(step)`, `endsLevel(state)`, `LEVELS`, `AVATARS` (pure). Resources and the astronaut carry across levels; a checkpoint retry stays on the same level and restores its starting state. |
+| Camera | After Launch the whole base shows for 1.6 s, then the base layer (`.scene__stage`) pans and zooms to the active cabinet (max 2.2×) and moves with each step; the ending zooms back out to the sunrise base. HUD and decision panel never scale; device labels, the tap cue, arrow and notes are counter-scaled so they stay readable. 0.9 s move; **instant under reduced motion**. |
+| Ending | At sunrise the end card adds a **Transmitter plan** built from this run (panels charging; cable: printed clip / secured / sent without a check; signal sent, about 1.3 s; Earth: no answer yet) and the question **"Will the signal reach Earth?"**, then the unchanged final line **"Signal sent. Waiting for confirmation."** |
+
+Contract note: `newRun` and `newPractice` take an optional avatar ('girl' default); state gains `avatar`. `specs/plan.md` §5 is otherwise unchanged.
+
+### Checks actually run (production preview, headless Chrome via CDP — emulated)
+
+| Check | Result |
+|---|---|
+| `npm test` | **37/37 pass** (5 new: avatar stored and kept by retry, level map and Next Level boundaries, panel Level X of 5 + chosen speaker, resource carryover, crew screen and ending plan/question) |
+| `npm run build` | Pass |
+| Five levels, girl at 1366x768 (mouse), boy at 375x812 (touch), girl at 360x692 (reduced motion) | Crew screen: Confirm disabled until a pick; label "Confirm: <name>". Launch: overview (zoom 1) → greenhouse cabinet (zoom 2.2); transition 0.9 s, **0 s with reduced motion**. Levels 1–5 in order with cameras greenhouse, valve, shelter, oxygen, repair, plastic, signal. **Next Level** after greenhouse, shelter, oxygen and plastic; Continue inside levels. Speaker, portrait and lead sprite match the chosen astronaut in every level. Carryover: power 4 → 4 → 3 → 0, water 4 → 1, meals 2 → 1 → 0, warmth 2. Ending: overview at sunrise, plan, question, final line |
+| Checkpoint retry | Leave It As Is → warmth 0 → Try This Crisis Again → still **Level 2 of 5**, camera on the valve, power 4 and warmth 1 restored, same astronaut |
+| Fit, 19 measurements per size | 1366x768, 1920x1080, 360x800, 375x812, 360x692, 375x664: every step fits, no page or panel scroll |
+| Keyboard only | Enter picks the astronaut, confirms, launches and plays to **"Signal sent. Waiting for confirmation."**; marked device reachable by Shift+Tab |
+| Regression: Water Training + ISS (touch), Shelter hotspot vs shortcut, audio | Kit 3 → 2 / standard 3 → 1; ISS 14/20 and 17/20, water unchanged; Shelter opens the same choices by mouse, touch and keyboard; sound on by default, one sound per action, saved Off respected |
 
 ## Review pass (14 Nov) — lab zoom, fit, tap marker, flags, sound default
 

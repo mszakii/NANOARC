@@ -63,7 +63,7 @@ export const BUDGET = 10000;
 export const ITEMS = { battery: { cost: 5000 }, kit: { cost: 5400 }, mealPack: { cost: 300 } };
 export function loadoutTotal(ids)            // ids: string[] of ITEMS keys -> number
 export function canLaunch(ids)               // -> { ok, total, remaining }
-export function newRun(ids)                  // -> state at step 'greenhouse', phase 'choose', checkpoint captured
+export function newRun(ids, avatar = 'girl') // -> state at step 'greenhouse', phase 'choose', checkpoint captured; state.avatar
 export function newPractice(withKit)         // -> mode 'practice', step 'repair', phase 'choose', water 3, checkpoint captured
 export function options(state)               // -> Option[] for state.step ([] when step is 'done'); never mutates
 export function confirm(state, optionId)     // -> new state; returns the SAME reference if phase !== 'choose',
