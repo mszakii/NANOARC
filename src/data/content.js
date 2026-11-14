@@ -95,6 +95,9 @@ export const UI = {
 
   compareIss: 'Compare ISS Recovery',
   notebook: 'Open Notebook',
+  soundOn: 'Sound Effects: On',
+  soundOff: 'Sound Effects: Off',
+  soundNone: 'Sound Effects: not available',
 
   summaryTitle: 'Your choices',
 
@@ -361,6 +364,34 @@ export const RECOVERY = {
   fallback: 'That did not keep the crew safe. Try this crisis again.',
 };
 
+/** Notebook experiment "Test the Membrane". Short labels for ages 7 to 12. */
+export const NOTEBOOK = {
+  title: 'Test the Membrane',
+  warmLabel: 'Warm used water',
+  membraneLabel: 'Membrane',
+  coolLabel: 'Cool side',
+  cupLabel: 'TEST SAMPLE',
+  start: 'Start the Test',
+  running: 'Testing…',
+  collect: 'Collect the Test Sample',
+  again: 'Run the Test Again',
+  steps: ['Warm the used water.', 'Watch vapor pass through the membrane.', 'Collect the drops in the cup.'],
+  stepIndex: { ready: 0, running: 1, done: 2, collected: 3 },
+  status: {
+    ready: 'Press Start the Test to warm the used water.',
+    running: 'Vapor rises from the warm water. Only vapor fits through the tiny holes.',
+    done: 'On the cool side, the vapor turns back into drops. They drip into the cup.',
+    collected: 'You collected a Test Sample for the lab.',
+  },
+  badge: 'goes to the lab. It is not drinking water. The crew’s bottles did not change.',
+  figure: {
+    ready: 'Warm used water on the left, a membrane in the middle, a cool side and an empty Test Sample cup on the right.',
+    running: 'Vapor dots move from the warm water through the membrane to the cool side.',
+    done: 'Drops form on the cool side and fill the Test Sample cup.',
+    collected: 'The Test Sample cup is full and collected.',
+  },
+};
+
 /** Science Behind This. One topic per step. Source links come from docs/Science_Evidence.md. */
 export const SCIENCE_UI = {
   heading: 'Science Behind This',
@@ -453,14 +484,15 @@ export const SCIENCE = {
     ],
   },
   notebook: {
-    title: 'Notebook: a water test',
-    // Video slot: notebook. This still and text stand in for the optional notebook clip.
-    still: 'notebook',
+    title: 'Notebook: Test the Membrane',
+    // Video slot: notebook. The experiment below (text + simple drawing) stands in for the optional clip.
+    experiment: 'membrane',
     body: [
-      'In a lab on Earth, scientists tested a special filter called a membrane. It cleaned a small sample of used water.',
-      'This is a test sample only. It is not drinking water, and it does not change the crew’s bottles.',
+      'Lab research example. Scientists on Earth tested a way to clean used water, like the urine a space station recycles. It is called membrane distillation.',
+      'A membrane is a thin sheet full of tiny holes, much thinner than a hair. Making materials with holes this small is part of nanotechnology. Warm water gives off vapor. The vapor passes through the holes. Most of the dirty stuff stays behind.',
     ],
-    links: [{ label: 'Khumalo et al., laboratory membrane distillation study', href: 'https://doi.org/10.1016/j.seppur.2018.10.035' }],
+    links: [{ label: 'Khumalo et al. (2019), laboratory membrane distillation study', href: 'https://doi.org/10.1016/j.seppur.2018.10.035' }],
+    teaching: 'Lab research example, not to scale. The Test Sample is not drinking water. It does not change the crew’s bottles. The station’s own recycling is in Compare ISS Recovery.',
   },
   plastic: {
     title: 'Printing with old plastic',

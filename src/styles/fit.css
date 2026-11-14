@@ -633,3 +633,132 @@
     font-size: 13px;
   }
 }
+
+/* ---------- Notebook: Test the Membrane ---------- */
+.membrane {
+  margin: 12px 0 4px;
+  padding: 12px;
+  border: 2px solid var(--teal);
+  border-radius: var(--radius);
+  background: var(--card);
+
+  & h4 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 6px;
+  }
+}
+
+.mb-figure {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 0 auto;
+
+  & .mb-tank { stroke: var(--ink); stroke-width: 3; }
+  & .mb-warm { fill: #fde9c4; }
+  & .mb-cool { fill: #e3f1fb; }
+  & .mb-water { fill: #f2c76e; opacity: 0.85; }
+  & .mb-membrane { fill: var(--teal-soft); stroke: var(--ink); stroke-width: 3; }
+  & .mb-pore { fill: var(--card); stroke: var(--teal); stroke-width: 1.5; }
+  & .mb-plate { fill: var(--sky-blue); stroke: var(--ink); stroke-width: 2; }
+  & .mb-heat { fill: none; stroke: var(--coral); stroke-width: 3; stroke-linecap: round; opacity: 0; }
+  & .mb-vapor { fill: var(--card); stroke: var(--ink-soft); stroke-width: 1.5; opacity: 0; }
+  & .mb-drop { fill: var(--sky-blue); stroke: var(--ink); stroke-width: 1.5; opacity: 0; }
+  & .mb-cup { fill: var(--card); stroke: var(--ink); stroke-width: 3; }
+  & .mb-fill { fill: var(--sky-blue); transform-box: fill-box; transform-origin: 50% 100%; scale: 1 0; }
+  & .mb-label { font: 700 11px var(--font); fill: var(--ink); }
+  & .mb-cup-label { font: 800 10px var(--font); fill: var(--warn-ink); letter-spacing: 0.04em; }
+}
+
+/* Running: heat on, vapor drifts through the membrane pores, drops form, the cup starts filling. */
+.membrane[data-stage='running'] .mb-figure {
+  & .mb-heat { opacity: 1; }
+  & .mb-vapor { opacity: 1; animation: mb-cross 2.4s ease-in-out calc(var(--i) * 0.28s) both; }
+  & .mb-drop { animation: mb-drip 1s ease-in calc(1s + var(--i) * 0.5s) both; }
+  & .mb-fill { scale: 1 0.6; transition: scale 2.4s ease-out; }
+}
+
+.membrane:is([data-stage='done'], [data-stage='collected']) .mb-figure {
+  & .mb-drop { opacity: 1; translate: 0 22px; }
+  & .mb-fill { scale: 1 1; }
+}
+
+.membrane[data-stage='collected'] .mb-figure .mb-cup {
+  stroke: var(--teal);
+  stroke-width: 4;
+}
+
+.mb-steps {
+  margin: 8px 0 4px;
+  padding-left: 22px;
+  font-size: 15px;
+
+  & li.is-now { font-weight: 800; }
+  & li.is-done { color: var(--ink-soft); text-decoration: line-through; }
+}
+
+.mb-status {
+  font-weight: 700;
+}
+
+.mb-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 2px solid var(--teal);
+  border-radius: var(--radius-sm);
+  background: var(--teal-soft);
+}
+
+.mb-actions {
+  display: flex;
+  justify-content: center;
+
+  & .btn { min-width: 220px; }
+}
+
+@keyframes mb-cross {
+  0% { opacity: 0; translate: 0 0; }
+  15% { opacity: 1; }
+  70% { opacity: 1; translate: 118px -6px; }
+  100% { opacity: 0; translate: 150px 0; }
+}
+
+@keyframes mb-drip {
+  0% { opacity: 0; translate: 0 -40px; }
+  30% { opacity: 1; }
+  100% { opacity: 1; translate: 0 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .membrane .mb-figure * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Sound toggle ---------- */
+.btn-sound[aria-pressed='true'] {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+}
+
+.tray-top .tray-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* During play the panel title already names the screen: keep the header to one row of tools. */
+.tray-top:not(.tray-top--plain) .brand {
+  display: none;
+}
+
+.tray-top:not(.tray-top--plain) {
+  justify-content: flex-end;
+}

@@ -3,6 +3,7 @@
 import { SCIENCE, SCIENCE_UI } from '../data/content.js';
 import { esc } from './hud.js';
 import { icon } from './icons.js';
+import { membraneHtml, membraneClick, resetMembrane } from './membrane.js';
 
 let dlg = null;
 let opener = null;
@@ -17,6 +18,7 @@ function ensureDialog() {
   document.body.append(dlg);
 
   dlg.addEventListener('click', (event) => {
+    if (membraneClick(event.target, repaintMembrane)) return;
     const modeButton = event.target.closest('[data-iss-mode]');
     if (modeButton) {
       const mode = SCIENCE_UI.issModes.find((m) => m.pct === Number(modeButton.dataset.issMode));
@@ -30,6 +32,7 @@ function ensureDialog() {
     if (event.target === dlg || event.target.closest('[data-science-close]')) dlg.close();
   });
   dlg.addEventListener('close', () => {
+    resetMembrane(); // the experiment never outlives the Notebook, and never touches the mission
     // Return focus to the button that opened the panel. The tray may have been
     // re-rendered meanwhile, so fall back to the current science button.
     const target = opener?.isConnected ? opener : document.querySelector('[data-action="science"]');
@@ -74,13 +77,23 @@ function topicHtml(topic) {
     <h3 class="dlg-title">${esc(topic.title)}</h3>
     ${topic.body.map((p) => `<p>${esc(p)}</p>`).join('')}
     ${topic.compare ? comparisonHtml() : ''}
+    ${topic.experiment === 'membrane' ? `<div id="membrane-slot">${membraneHtml()}</div>` : ''}
     ${facts}
     <h4>${esc(SCIENCE_UI.sources)}</h4>
     <ul class="links">${links}</ul>
-    <p class="teaching">${icon('info')} ${esc(SCIENCE_UI.teaching)}</p>
+    <p class="teaching">${icon('info')} ${esc(topic.teaching ?? SCIENCE_UI.teaching)}</p>
     <div class="dlg-actions">
       <button type="button" class="btn btn-primary" data-science-close>${esc(SCIENCE_UI.close)}</button>
     </div>`;
+}
+
+/** Repaint only the experiment block and keep keyboard focus on its main button. */
+function repaintMembrane() {
+  const slot = dlg?.querySelector('#membrane-slot');
+  if (!slot) return;
+  const hadFocus = slot.contains(document.activeElement);
+  slot.innerHTML = membraneHtml();
+  if (hadFocus) slot.querySelector('[data-mb-primary]')?.focus();
 }
 
 /** Fill and open the science dialog for one topic id (see SCIENCE in content.js). */
@@ -89,6 +102,7 @@ export function openScience(id) {
   if (!topic) return;
   const d = ensureDialog();
   if (!d.open) opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  resetMembrane();
   d.innerHTML = topicHtml(topic);
   if (!d.open) d.showModal();
   d.scrollTop = 0;

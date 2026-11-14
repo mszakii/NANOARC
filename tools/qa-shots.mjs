@@ -283,6 +283,150 @@ async function touchRun() {
   writeFileSync(join(outDir, `${label}-touch-training-375x812.png`), Buffer.from(shot.data, 'base64'));
   console.log(out.join(String.fromCharCode(10)));
 }
+// Real mouse click (a trusted user gesture), used for audio and the Notebook.
+async function clickReal(selector) {
+  const box = await evaluate(`(() => { const e = document.querySelector('${selector}'); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()`);
+  if (!box) throw new Error('click target missing: ' + selector);
+  const [x, y] = box;
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
+  await sleep(300);
+}
+async function shotTo(name) {
+  const shot = await send('Page.captureScreenshot', { format: 'png' });
+  writeFileSync(join(outDir, `${label}-${name}.png`), Buffer.from(shot.data, 'base64'));
+}
+async function pressEscape() {
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await sleep(400);
+}
+
+// Notebook: Test the Membrane in Water Training, at one size, with or without reduced motion.
+async function notebookRun({ w, h, reduce }) {
+  const tag = `${w}x${h}${reduce ? '-reduce' : ''}`;
+  await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: w < 700 });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: reduce ? 'reduce' : 'no-preference' }] });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  const water = `document.querySelector('[data-res="water"] .ctr-val')?.textContent.trim()`;
+  const stageOf = `document.querySelector('.membrane')?.dataset.stage`;
+  await clickReal('[data-action="training"]');
+  await clickReal('[data-action="practice"][data-id="kit"]');
+  await clickReal('[data-action="open"]');
+  await clickReal('[data-action="select"][data-id="kit"]');
+  await clickReal('[data-action="confirm"]');
+  await sleep(1600);
+  const out = [`${tag}: water before ${await evaluate(water)}`];
+  await clickReal('[data-action="science"][data-id="notebook"]');
+  out.push('opened: stage ' + (await evaluate(stageOf)) + ', link ' + (await evaluate(`[...document.querySelectorAll('#science-dialog .links a')].map((a) => a.href).join()`)));
+  await evaluate(`document.querySelector('.membrane').scrollIntoView({ block: 'center' }); true`);
+  if (!reduce) await shotTo(`notebook-ready-${tag}`);
+  await evaluate(`document.querySelector('[data-membrane="start"]').focus(); true`);
+  await key('Enter');
+  out.push('after Enter: stage ' + (await evaluate(stageOf)));
+  await key('Enter'); // repeated input while testing must do nothing
+  if (!reduce) {
+    await sleep(700);
+    await shotTo(`notebook-running-${tag}`);
+    await sleep(2200);
+  }
+  out.push('then: stage ' + (await evaluate(stageOf)) + ', focus on ' + (await evaluate(`document.activeElement?.dataset.membrane ?? document.activeElement?.tagName`)));
+  await key('Enter');
+  out.push('collect: stage ' + (await evaluate(stageOf)) + ' | ' + (await evaluate(`document.querySelector('.mb-status').textContent + ' | ' + (document.querySelector('.mb-badge')?.textContent ?? '').split(/\s+/).join(' ').trim()`)));
+  await evaluate(`document.querySelector('.membrane').scrollIntoView({ block: 'center' }); true`);
+  await shotTo(`notebook-collected-${tag}`);
+  await pressEscape();
+  out.push(`closed: dialog open=${await evaluate(`document.querySelector('#science-dialog').open`)}, focus ${await evaluate(`document.activeElement?.dataset.id`)}, water after ${await evaluate(water)}`);
+  console.log(out.join(String.fromCharCode(10)));
+}
+
+// Audio: muted at start, on after a real click, one sound per confirmed action, none on re-render.
+async function audioRun() {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  const log = () => evaluate(`JSON.stringify(globalThis.__qsSfx)`);
+  const label = () => evaluate(`document.querySelector('[data-action="sound"]').textContent.trim() + ' (aria-pressed=' + document.querySelector('[data-action="sound"]').getAttribute('aria-pressed') + ')'`);
+  const out = [];
+  out.push('initial: ' + (await label()));
+  await clickReal('[data-action="start"]');
+  out.push('muted Start click logged: ' + (await log()));
+  await clickReal('[data-action="sound"]');
+  out.push('after toggle: ' + (await label()) + ' log ' + (await log()));
+  await clickReal('[data-action="launch"]');
+  await clickReal('[data-action="open"]');
+  await clickReal('[data-action="select"][data-id="save_power"]');
+  await clickReal('[data-action="confirm"]');
+  await clickReal('[data-action="continue"]');
+  await clickReal('[data-action="open"]');
+  await clickReal('[data-action="select"][data-id="adjust"]');
+  await evaluate(`globalThis.__qsSfx.length = 0; true`);
+  const box = await evaluate(`(() => { const r = document.querySelector('[data-action="confirm"]').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()`);
+  for (let i = 0; i < 3; i += 1) {
+    await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: box[0], y: box[1], button: 'left', clickCount: i + 1 });
+    await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: box[0], y: box[1], button: 'left', clickCount: i + 1 });
+  }
+  await sleep(500);
+  out.push('Confirm clicked 3x fast: ' + (await log()) + ', warmth ' + (await evaluate(`document.querySelector('[data-res="warmth"] .ctr-val').textContent.trim()`)));
+  await evaluate(`globalThis.__qsSfx.length = 0; true`);
+  await clickReal('[data-action="science"][data-id="heat"]');
+  await pressEscape();
+  out.push('opening/closing Science (re-render, no state change): ' + (await log()));
+  await clickReal('[data-action="continue"]');
+  await clickReal('[data-action="open"]');
+  await clickReal('[data-action="select"][data-id="early"]');
+  await clickReal('[data-action="confirm"]');
+  await clickReal('[data-action="bag"]');
+  await clickReal('[data-action="bag-spot"]');
+  await clickReal('[data-action="continue"]');
+  await clickReal('[data-action="open"]');
+  await clickReal('[data-action="select"][data-id="restart"]');
+  await clickReal('[data-action="confirm"]');
+  await clickReal('[data-action="continue"]');
+  await clickReal('[data-action="open"]');
+  await clickReal('[data-action="select"][data-id="standard"]');
+  await evaluate(`globalThis.__qsSfx.length = 0; true`);
+  await clickReal('[data-action="confirm"]');
+  await sleep(2400);
+  out.push('standard repair (2 turns): ' + (await log()));
+  await clickReal('[data-action="continue"]');
+  await clickReal('[data-action="open"]');
+  await clickReal('[data-action="select"][data-id="sort"]');
+  await clickReal('[data-action="confirm"]');
+  await clickReal('[data-action="continue"]');
+  await clickReal('[data-action="open"]');
+  await clickReal('[data-action="select"][data-id="send_now"]');
+  await evaluate(`globalThis.__qsSfx.length = 0; true`);
+  await clickReal('[data-action="confirm"]');
+  out.push('Send Now: ' + (await log()));
+  out.push('audio context: ' + (await evaluate(`typeof AudioContext`)));
+  await clickReal('[data-action="sound"]');
+  await evaluate(`globalThis.__qsSfx.length = 0; true`);
+  await clickReal('[data-action="continue"]');
+  out.push('muted again: ' + (await label()) + ', Continue logged ' + (await log()));
+  out.push('final: ' + (await evaluate(`document.querySelector('.final-line')?.textContent.trim()`)));
+  console.log(out.join(String.fromCharCode(10)));
+}
+
+if (process.env.NOTEBOOK || process.env.AUDIO) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    if (process.env.NOTEBOOK) {
+      await notebookRun({ w: 1366, h: 768, reduce: false });
+      await notebookRun({ w: 375, h: 812, reduce: false });
+      await notebookRun({ w: 375, h: 812, reduce: true });
+    }
+    if (process.env.AUDIO) await audioRun();
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
 if (process.env.TOUCH) {
   try {
     await send('Page.enable');
