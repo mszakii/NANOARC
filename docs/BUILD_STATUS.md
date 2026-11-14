@@ -1,7 +1,8 @@
 # Qamar Square — Build status
 
 **Updated:** 14 November 2026 (Africa/Cairo).
-**Milestone:** integration implemented; desktop keyboard and mobile viewport checks passed. Touch and reduced-motion runtime checks remain pending because browser automation stopped.
+**Milestone:** integration implemented; reduced-motion runtime and final production game flows verified. Follow-up portrait/touch checks are in progress.
+**Current QA baseline:** `e51c098`. Working tree was clean at the start of the follow-up. All commits remain local.
 **Starting revision:** `8396e18` (following `be806fa`). The scene, scene CSS, ten crew WebPs, crop script and scene preview were already committed in `8396e18`. The working tree was clean before integration. No previous work was discarded. This status ships in the local integration commit; nothing was pushed.
 
 ## Implemented
@@ -14,6 +15,19 @@
 - Three regression tests cover ending summaries for contrasting runs and practice results that offer another practice rather than story continuation.
 
 ## Checks actually run
+
+### Follow-up batch 1 — reduced-motion runtime (14 November 2026)
+
+- Built production with `npm run build`; `npm test` passed **27/27** after the only code change in this batch.
+- Fixed the browser-console 404 for the missing favicon by adding a local crescent SVG and a relative icon link. The JS/CSS bundle contents are unchanged. The production icon URL returns HTTP 200.
+- Opened a separate Chrome Guest session and used DevTools Command Menu → **Emulate CSS prefers-reduced-motion: reduce**. Rendering panel confirmed that value. After undocking DevTools, the native game window became minimized; restore attempts were rejected by the native helper's input-freshness guard. No settings or console-paste protection was bypassed.
+- Continued the runtime check in in-app Chromium on the same final production build. Its real `matchMedia('(prefers-reduced-motion: reduce)').matches` returned **true**; computed `--fast` and `--slow` both returned **1ms**. This browser already inherited the reduced-motion preference; no query-string simulation, JavaScript stub, or source override was used.
+- At start, active greenhouse, after a toy tap, bag held, generator running, sunrise and signal sent: every scene element had computed `animation-name: none`; scene transition durations were 0–4 ms. Visually, there was no ongoing wiggle, spin, bobbing or travelling signal. Sunrise and final scene states remained visible.
+- Completed the PRD no-purchase route: Save Power → leave valve/recovery → retry → Adjust → early shelter + bag placement → Restart Generator → Standard Repair → Sort → sunrise → Send Now. The repair result and Continue were available without the normal timed turn sequence. Final supplies: power 0, water 1, meals 0, warmth 2, cabin oxygen 2, reserve 1. Ended on **“Signal sent. Waiting for confirmation.”**
+- Ending summary correctly listed saved power/restart, early shelter, standard repair and sorting. The failed heat attempt did not leak into the successful decisions.
+- On production, repeated both Water Training paths: kit from 3 to 2 bottles in 1 turn; Try Both Repair Paths reset to 3; standard ended at 1 in 2 turns. Keyboard Enter controls and scene recycler hotspot worked.
+- ISS comparison on production story and practice: 20 total drops, 14/17 recovered, NASA historical-report link present, full HUD unchanged after closing, focus returned to Compare ISS Recovery. No captured error/warning logs in the in-app browser at the story-ending checkpoint.
+- Screenshot and computed-style evidence saved outside Git under the chat's `qamar-square-qa` artifact folder.
 
 ### Automated
 
@@ -51,7 +65,7 @@ None performed. No physical phone or hardware touch testing is claimed. Laptop k
 Computer Use refused to bind the native Brave window because it could not determine the current browser URL confidently enough to enforce policy. Computer Use was then stopped for the turn. The in-app viewport capability supports resizing but does not expose touch or reduced-motion emulation. No alternate browser automation mechanism was used to bypass that stop.
 
 1. **Real touch / phone:** run the preview on the LAN using the command below, then verify device taps, preview/confirm, heat recovery/retry, both training paths and ISS controls on a physical phone. A 360 px viewport and other browser engines also remain unchecked in this session.
-2. **Reduced motion runtime:** enable Reduce Motion in the test environment (or emulate `prefers-reduced-motion: reduce` in DevTools). Verify that device wiggles/spins, crew travel, bag bobbing and signal motion stop, repair resolves without timed progression, and keyboard controls remain usable. Code review confirmed existing CSS disables scene animations, motion tokens fall to 1 ms, toy bounce is skipped, and `startSequence()` bypasses its timer; this is **code review, not a browser runtime pass**.
+2. **Reduced motion runtime:** now passed in follow-up batch 1 above. A physical phone's system preference remains part of the hardware checklist, not an implementation blocker.
 3. **Optional toy polish:** the existing scene uses a full-base phone view plus tray shortcuts; a zooming phone camera was not added. Sound, video, Knowledge Meals and deployment remain outside this integration.
 
 ## Run
