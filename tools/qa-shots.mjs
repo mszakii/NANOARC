@@ -543,6 +543,51 @@ if (process.env.SHELTER) {
   process.exit(0);
 }
 
+// Report screenshots: Shelter (closed, marked) and Water & Waste preview at phone sizes, touch emulated.
+async function reportShots() {
+  const sizes = (process.env.SHOTS === '1' ? '375x812,360x692' : process.env.SHOTS).split(',');
+  for (const size of sizes) {
+    const [w, h] = size.split('x').map(Number);
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 2, mobile: true });
+    await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    await send('Page.navigate', { url: base });
+    await sleep(1200);
+    await evaluate(`${HELPERS}
+      await c('[data-action="start"]'); await c('[data-action="launch"]');
+      for (const id of ['save_power', 'adjust']) {
+        await c('[data-action="open"]'); await c('[data-action="select"][data-id="' + id + '"]');
+        await c('[data-action="confirm"]'); await c('[data-action="continue"]');
+      }
+      true;`);
+    await sleep(600);
+    await shotTo(`shelter-${size}`);
+    await evaluate(`${HELPERS}
+      await c('[data-action="open"]'); await c('[data-action="select"][data-id="early"]'); await c('[data-action="confirm"]');
+      await c('[data-action="bag"]'); await c('[data-action="bag-spot"]'); await c('[data-action="continue"]');
+      await c('[data-action="open"]'); await c('[data-action="select"][data-id="restart"]'); await c('[data-action="confirm"]'); await c('[data-action="continue"]');
+      await w(400);
+      true;`);
+    await shotTo(`water-waste-open-${size}`);
+    await evaluate(`${HELPERS} await c('[data-action="open"]'); await c('[data-action="select"][data-id="standard"]'); true;`);
+    await sleep(500);
+    const fit = await evaluate(`(() => { const t = document.querySelector('.tray'); return [t.scrollHeight, t.clientHeight, document.documentElement.scrollHeight, innerHeight]; })()`);
+    await shotTo(`water-waste-preview-${size}`);
+    console.log(size, 'Water & Waste preview tray', fit[0], '/', fit[1], 'page', fit[2], '/', fit[3]);
+  }
+}
+if (process.env.SHOTS) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    await reportShots();
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
 if (process.env.NOTEBOOK || process.env.AUDIO) {
   try {
     await send('Page.enable');

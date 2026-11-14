@@ -1,9 +1,38 @@
 # Qamar Square — Build status
 
 **Updated:** 14 November 2026 (Africa/Cairo).
-**Milestone:** Notebook experiment (Test the Membrane) and muted-by-default sound effects added on top of the UI pass, verified in this environment. Physical-phone checks remain Ahmed's (see `docs/MANUAL_CHECKS.md`).
-**Latest working revision:** `9bb1e42` (sound) on top of `ab3d252` (Notebook), plus the status commit after them. Earlier UI pass: `1590f9c`, `7d45ff1`, `85e9fb2`, `105cf54`. All commits are local; nothing was pushed.
+**Milestone:** review pass complete: Nanotechnology Lab zoom, no-scroll play on desktop and phones (incl. browser bars), input-aware tap marker, star twinkle and lunar flags, sound on by default with a saved choice. Verified in this environment; physical-phone and listening checks remain Ahmed's (see `docs/MANUAL_CHECKS.md`).
+**Latest working revision:** `e255922` plus the status commit after it (review pass: `efaf118`, `f6162ee`, `ccc19d2`, `c781a0c`, `e255922`). Earlier: Notebook/sound `ab3d252`, `9bb1e42`, `66c633d`; UI pass `1590f9c`, `7d45ff1`, `85e9fb2`. All commits are local; nothing was pushed.
 **Integration history:** the scene, scene CSS, ten crew WebPs, crop script and scene preview were committed in `8396e18`; integration in `e51c098`; favicon and reduced-motion record in `8b4fa53`; phone checklist in `3050d01`. No earlier work was discarded.
+
+## Review pass (14 Nov) — lab zoom, fit, tap marker, flags, sound default
+
+**Baseline verified before editing:** HEAD `e4786ac` (two commits after the reported `5a5b753`: `66c633d` sound-level fix and `e4786ac` its confirmation), clean tree, `npm test` 31/31, `npm run build` pass. Fit baseline: desktop fitted; 360x800 and 375x812 were 4–11 px over at Water & Waste; with browser bars (360x692, 375x664) panels overflowed by up to 48 and 79 px. `nanoarc_logo.jpg` was not in the repo; the attached logo image was used. No credits area existed; one was added.
+
+| Commit | What changed |
+|---|---|
+| `efaf118` | **Nanotechnology Lab: Test the Membrane** title; a static zoom beside the membrane with labelled **Silica nanoparticles** (dark dots in the membrane material) and **Water vapor** (light bubbles through the pores), captioned **Illustration, not to scale.**; copy "This research membrane contains tiny silica particles called nanoparticles. Water vapor passes through the membrane and cools into drops." Checked against the cited study: Khumalo et al. (2019), Sep. Purif. Technol. 211:610–617, DOI 10.1016/j.seppur.2018.10.035 — its PVDF/PTFE membranes are modified with methyl-functionalized silica nanoparticles. TEST SAMPLE stays outside drinking water; ISS comparison unchanged. |
+| `f6162ee` | **No-scroll standard play** at 1366x768, 1920x1080, 360x800, 375x812 and with browser bars at 360x692 and 375x664. Phones: Sound and Restart move into a **Menu** dialog in the panel header (Enter opens with focus on Sound; Esc returns focus to Menu); **Science** short visible label (accessible name "Science Behind This"); the crew line is hidden while choosing (it repeats the situation; the HUD shows the numbers); the bag actions take the main-button slot instead of a second disabled button; tighter spacing on short screens. Bag taps share the 300 ms double-tap guard. |
+| `ccc19d2` | **Tap marker**: one active marker — ring, short ink-and-sun **arrow anchored to the hotspot**, bubble **"Tap the Shelter"** (touch) / **"Click the Shelter"** (mouse) / **"Press Enter"** (keyboard focus), aligned inward to stay in the scene. Phones keep ring + arrow in the scene and show "Or tap the Shelter in the base." in the tray above the main button (bubbles crowded a 270 px scene). Storm alert moved to the sky; roof crew stand left of the antenna; bag steps show their marker; finished devices keep a compact check. |
+| `c781a0c` | A few background stars twinkle slowly at low contrast (6–8 s, opacity 1 → 0.55; off under reduced motion). Two still flags on the lunar surface away from the roof and hotspots: **NANOARC** logo (cropped from the attached image, proportions kept, `public/assets/brand/nanoarc-logo.webp`, 5.6 KB) and a **plain mission flag** — the NASA insignia was not used because no permission is on file. Credits line on Start and the ending: "A NANOARC project for the NASA Space Apps Challenge." |
+| `e255922` | **Sound Effects On by default** for new players, quieter master (peaks: click −16.6, drop −11.3, relay −7.5, valve −7.5 dBFS). Web Audio starts on the first tap, click or key (for example Start Mission). The choice is saved in `localStorage` (`qamar-square:sound-effects`); refresh keeps Off; blocked storage falls back to the default. |
+
+### Checks actually run (production preview, headless Chrome via CDP — emulated)
+
+| Check | Result |
+|---|---|
+| `npm test` | **32/32 pass** |
+| `npm run build` | Pass |
+| Fit, full run, 19 measurements per size | **1366x768, 1920x1080, 360x800, 375x812, 360x692, 375x664: every step fits; page scroll 0; panel overflow 0** |
+| Report screenshots | `docs/qa/final-shelter-{375x812,360x692}.png`, `docs/qa/final-water-waste-preview-{375x812,360x692}.png` (tray 536/536 and 467/467, page = viewport), sheet `docs/qa/final-mobile-sheet.png`; Shelter opened and keyboard-focus shots `docs/qa/final-shelter-*.png` |
+| Shelter hotspot vs shortcut | Mouse 1366x768: cue "Click the Shelter", both open `early, at_alert`. Touch 375x664: tray "Or tap the Shelter in the base.", both open the same. Keyboard: focus on the Shelter shows "Press Enter"; Enter opens the same choices |
+| Keyboard-only story | Enter only, no purchases → **"Signal sent. Waiting for confirmation."** |
+| Phone Menu (375x664, keys) | Enter opens Menu (focus on Sound); Enter toggles On/Off; Esc returns focus to Menu; Restart from Menu opens the confirmation |
+| Touch: Water Training + ISS | Kit 3 → 2 in 1 turn; standard 3 → 1 in 2 turns; ISS 14/20 and 17/20 to Further Treatment with NASA source; water unchanged |
+| Notebook lab | 1366x768, 375x812, 375x812 reduced motion: start → running → collect → close; DOI link; water 2 before and after; focus back to Open Notebook |
+| Reduced motion | Valve 135°, arrow 0.42, "Warmth 1 → 2" note at once; **no running animations** (twinkle off). Normal motion: twinkle running at 5.9 and 7.8 s |
+| Audio, desktop and phone (strict autoplay policy) | New player: **On**, engine off until the first gesture; Start Mission → one click, engine running; Confirm ×3 → one valve; Science open/close → none; repair → two drops; Send Now → one relay; Off → silent; **refresh keeps Off**, Start Mission then silent |
+| No Web Audio | Keyboard-only story still ends on the final line |
 
 ## Notebook and sound (14 Nov)
 
