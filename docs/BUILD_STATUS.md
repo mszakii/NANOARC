@@ -5,6 +5,12 @@
 **Latest working revision:** `fd9a9c1` (five levels) plus the status commit after it. Earlier: review pass `efaf118`–`1822091`; Notebook/sound `ab3d252`, `9bb1e42`, `66c633d`; UI pass `1590f9c`, `7d45ff1`, `85e9fb2`. All commits are local; nothing was pushed.
 **Integration history:** the scene, scene CSS, ten crew WebPs, crop script and scene preview were committed in `8396e18`; integration in `e51c098`; favicon and reduced-motion record in `8b4fa53`; phone checklist in `3050d01`. No earlier work was discarded.
 
+## Opening storyboard (14 Nov)
+
+`src/ui/intro.js` plays **opening-storyboard** fullscreen before the start screen, with a **Skip** button (always visible, 46 px tall; Escape also skips). Source `renders/opening-storyboard.mp4` (1920x1080, 73 s, 52 MB) was re-encoded to `public/assets/video/opening-storyboard.mp4` (1280x720, H.264 + AAC, faststart, **4.4 MB**) with a poster. English captions are burned into the video, so no separate track is added (a track doubled them). If the browser blocks audible autoplay, or Reduce Motion is on, a **Play Opening Story** button waits for a tap. The game is inert behind it; it ends on its own, on Skip/Escape, or if the video fails to load, and then the start screen shows. `?intro=0` in the address skips it (used by the QA script; `INTRO=1` tests it).
+
+Checked (production preview, headless Chrome, strict autoplay policy): overlay covers the full viewport; Play gate appears and Play starts the video with focus on Skip; Skip click, Escape, natural end and a video error each land on the start screen with the game interactive again; phone 375x664 with reduced motion shows the gate and Skip works by touch. Screenshots `docs/qa/open-intro-*.png`. `npm test` 37/37, `npm run build` pass; levels, keyboard story and fit regressions pass with the intro bypassed. Not heard on a real phone: audio and smooth playback.
+
 ## Five levels with character choice and a cabinet camera (14 Nov) — `fd9a9c1`
 
 | Area | What changed |

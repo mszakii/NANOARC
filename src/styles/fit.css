@@ -1050,3 +1050,46 @@
   font-weight: 800;
   text-align: center;
 }
+
+/* ---------- Opening storyboard (fullscreen) ---------- */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: #000;
+}
+
+.intro-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.intro-skip {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 2;
+  min-height: var(--tap);
+  background: rgb(255 245 229 / 0.95);
+}
+
+.intro-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  background: rgb(11 23 48 / 0.55);
+
+  &[hidden] {
+    display: none;
+  }
+
+  & .intro-play {
+    width: min(360px, calc(100vw - 32px));
+  }
+}

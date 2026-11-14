@@ -6,7 +6,9 @@ import { mkdirSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const [base = 'http://localhost:4173/', outDir = 'docs/qa', label = 'shot'] = process.argv.slice(2);
+const [rawBase = 'http://localhost:4173/', outDir = 'docs/qa', label = 'shot'] = process.argv.slice(2);
+// The opening storyboard would cover every run; ?intro=0 skips it (INTRO=1 tests it on its own).
+const base = rawBase + (process.env.INTRO ? '' : (rawBase.includes('?') ? '&' : '?') + 'intro=0');
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PORT = 9333;
 
@@ -172,7 +174,7 @@ async function tour(run) {
 }
 // Keyboard: real key events only (Enter / Tab / Shift+Tab). Reports each focused control.
 async function key(k, shift = false) {
-  const codes = { Enter: [13, String.fromCharCode(13)], Tab: [9, ''] };
+  const codes = { Enter: [13, String.fromCharCode(13)], Tab: [9, ''], Escape: [27, ''] };
   const [vk, text] = codes[k];
   const base = { key: k, code: k, windowsVirtualKeyCode: vk, modifiers: shift ? 8 : 0 };
   await send('Input.dispatchKeyEvent', { type: 'keyDown', ...base, ...(text ? { text } : {}) });
@@ -685,6 +687,71 @@ if (process.env.LEVELS) {
     await levelsRun({ w: 1366, h: 768, avatar: 'girl', reduce: false, shots: true });
     await levelsRun({ w: 375, h: 812, avatar: 'boy', reduce: false, shots: true });
     await levelsRun({ w: 360, h: 692, avatar: 'girl', reduce: true, shots: false });
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
+// Opening storyboard: fullscreen, Play gate under the strict autoplay rule, Skip (click, Escape), end, error, reduced motion.
+async function introRun() {
+  const url = base.replace(/[?&]intro=0/, '');
+  const out = [];
+  const state = () => evaluate(`(() => {
+    const i = document.querySelector('.intro'); const v = i?.querySelector('video'); const g = i?.querySelector('.intro-gate'); const s = i?.querySelector('.intro-skip');
+    const r = i?.getBoundingClientRect(); const sr = s?.getBoundingClientRect();
+    return { intro: Boolean(i), full: r ? r.width === innerWidth && r.height === innerHeight : null,
+      playing: v ? !v.paused && v.currentTime > 0 : null, t: v ? Math.round(v.currentTime * 10) / 10 : null, dur: v ? Math.round(v.duration) : null,
+      gate: g ? !g.hidden : null, skip: s ? s.textContent.trim() : null, skipBox: sr ? [Math.round(sr.width), Math.round(sr.height)] : null,
+      track: v?.textTracks?.[0] ? v.textTracks[0].label + ':' + v.textTracks[0].mode : null, cues: v?.textTracks?.[0]?.cues?.length ?? null,
+      pageInert: document.querySelector('#app').inert, screen: document.querySelector('.game')?.dataset.screen, focus: document.activeElement?.dataset?.intro ?? document.activeElement?.tagName }; })()`);
+  const fresh = async (w, h, reduce, mobile) => {
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile });
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: reduce ? 'reduce' : 'no-preference' }] });
+    await send('Page.navigate', { url });
+    await sleep(1500);
+  };
+  await fresh(1366, 768, false, false);
+  out.push('load (strict autoplay): ' + JSON.stringify(await state()));
+  await shotTo('intro-gate-1366x768');
+  await clickReal('[data-intro="play"]');
+  await sleep(2500);
+  out.push('after Play: ' + JSON.stringify(await state()));
+  await evaluate(`document.querySelector('.intro video').currentTime = 3.5; true`);
+  await sleep(1200);
+
+  await shotTo('intro-playing-1366x768');
+  await clickReal('[data-intro="skip"]');
+  out.push('after Skip click: ' + JSON.stringify(await state()) + ', video element gone: ' + !(await evaluate(`Boolean(document.querySelector('video'))`)));
+  await shotTo('intro-after-skip-1366x768');
+  await fresh(1366, 768, false, false);
+  await key('Escape');
+  out.push('Escape: ' + JSON.stringify(await state()));
+  await fresh(1366, 768, false, false);
+  await evaluate(`const v = document.querySelector('.intro video'); v.muted = true; v.play(); true`);
+  await sleep(500);
+  await evaluate(`const v = document.querySelector('.intro video'); v.currentTime = v.duration - 1.2; true`);
+  await sleep(3000);
+  out.push('video ended on its own: ' + JSON.stringify(await state()));
+  await fresh(1366, 768, false, false);
+  await evaluate(`document.querySelector('.intro video').dispatchEvent(new Event('error')); true`);
+  await sleep(300);
+  out.push('video error: ' + JSON.stringify(await state()));
+  await fresh(375, 664, true, true);
+  out.push('phone + reduced motion: ' + JSON.stringify(await state()));
+  await shotTo('intro-gate-375x664-reduce');
+  await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+  await tap('[data-intro="skip"]');
+  out.push('phone Skip by touch: ' + JSON.stringify(await state()));
+  await evaluate(`localStorage.clear(); true`);
+  console.log(out.join(String.fromCharCode(10)));
+}
+if (process.env.INTRO) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    await introRun();
   } finally {
     ws.close();
     chrome.kill();

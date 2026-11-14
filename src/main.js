@@ -12,6 +12,7 @@ import { renderPanel } from './ui/panel.js';
 import { renderStart, renderLoadout, renderEnd, renderCrew } from './ui/screens.js';
 import { openScience } from './ui/science.js';
 import { icon } from './ui/icons.js';
+import { showIntro } from './ui/intro.js';
 import { play, setSound, soundOn, soundAvailable, primeSound } from './ui/sound.js';
 
 const TURN_MS = 900;
@@ -466,3 +467,6 @@ app.addEventListener('click', (event) => {
 });
 
 render();
+
+// The opening storyboard plays first, fullscreen, with Skip. The start screen waits underneath.
+showIntro(document.body, app, () => render());
