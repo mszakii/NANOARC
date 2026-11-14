@@ -1,5 +1,7 @@
 # Qamar Square
 
+## 🚀 Play the demo: **[nanoarc.vercel.app](https://nanoarc.vercel.app)**
+
 > Pack for the Moon. Make tough choices. Keep your crew safe until sunrise.
 
 A 2D browser game for junior mission commanders aged 7–12, built for the NASA Space Apps challenge. The player packs with 10,000 Mission Credits, then keeps a moon-base crew safe through four connected crises (Power & Food, Heat & Shelter, Oxygen, Water & Waste) until sunrise.
