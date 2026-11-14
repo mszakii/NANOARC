@@ -1,9 +1,34 @@
 # Qamar Square — Build status
 
 **Updated:** 14 November 2026 (Africa/Cairo).
-**Milestone:** UI fit, active-device marker, icon set and motion pass complete and verified in this environment. Physical-phone checks remain Ahmed's (see `docs/MANUAL_CHECKS.md`).
-**Latest working revision:** see the "UI pass (14 Nov)" section below for commits `1590f9c`, `7d45ff1`, `85e9fb2` and the status commit after them. All commits are local; nothing was pushed.
+**Milestone:** Notebook experiment (Test the Membrane) and muted-by-default sound effects added on top of the UI pass, verified in this environment. Physical-phone checks remain Ahmed's (see `docs/MANUAL_CHECKS.md`).
+**Latest working revision:** `9bb1e42` (sound) on top of `ab3d252` (Notebook), plus the status commit after them. Earlier UI pass: `1590f9c`, `7d45ff1`, `85e9fb2`, `105cf54`. All commits are local; nothing was pushed.
 **Integration history:** the scene, scene CSS, ten crew WebPs, crop script and scene preview were committed in `8396e18`; integration in `e51c098`; favicon and reduced-motion record in `8b4fa53`; phone checklist in `3050d01`. No earlier work was discarded.
+
+## Notebook and sound (14 Nov)
+
+**Before this batch:** Water & Waste had an **Open Notebook** button that opened a text-only dialog with the Khumalo et al. link. A `still` field was declared but never rendered; there was no interaction. There was no audio.
+
+| Commit | What changed |
+|---|---|
+| `ab3d252` | **Test the Membrane** (`src/ui/membrane.js`): inside the Notebook, the player presses **Start the Test**, sees vapor dots cross the membrane's tiny holes and drops form on the cool side, then **Collect the Test Sample** into a cup labelled **TEST SAMPLE**. Three numbered steps, a live status line, a simple SVG and text (no video needed). Framed as a *lab research example* of membrane distillation, links the Khumalo et al. (2019) study, says it is not drinking water and not to scale. Its own state, reset on open and close; it cannot reach mission state. The ISS 70%/85% comparison stays in **Compare ISS Recovery**. Also adds `src/ui/sound.js` and 4 unit tests (31 total). |
+| `9bb1e42` | **Sound effects**: synthesized with Web Audio, no files, no music, melodies or loops. UI click, heat-valve ratchet, water drop (one per repair turn, and condensation in the Notebook), antenna relay on Send. Starts muted; **Sound Effects: Off / On** button (`aria-pressed`) in the tray header (under the panel on phones; at the bottom of start, packing and ending). A sound plays only from an action that changed the game, once, with a 90 ms per-sound throttle; re-renders play nothing. No Web Audio → label reads "Sound Effects: not available" and the game is unchanged. **Fix found during audio testing:** a fast triple click on Confirm also pressed Continue in the same place; the main tray button now ignores a second activation within 300 ms. |
+
+### Checks actually run (production preview, headless Chrome via CDP — emulated)
+
+| Check | Result |
+|---|---|
+| `npm test` | **31/31 pass** (adds Notebook citation and framing, stage logic incl. repeated Start, no mission-state change after a full experiment, sound muted/no-throw without Web Audio) |
+| `npm run build` | Pass |
+| Notebook, 1366×768 and 375×812, keyboard Enter | ready → running (second Enter ignored) → done (focus moves to Collect) → collected; status and badge text correct; DOI link present; Esc closes, focus returns to **Open Notebook**; **drinking water 2 before and after** |
+| Notebook, 375×812 reduced motion | Start shows the condensed result at once; collect and close work; water unchanged |
+| Audio, 1366×768 and 375×812, real mouse events | Starts **Off**; muted clicks log nothing; turning On (user gesture) plays one click; Confirm clicked **3× fast → one `valve` sound, one warmth change**; Science open/close → no sound; standard repair → `drop`, `drop`; Send Now → `relay`; Off again → silent; story ends on the final line |
+| No Web Audio (AudioContext removed before load), keyboard only | Toggle reads "Sound Effects: not available"; full story to **"Signal sent. Waiting for confirmation."** |
+| Keyboard-only story | Ends on the final line; Shift+Tab ×4 reaches the marked device, Enter opens its choices |
+| Touch (emulated), Water Training + ISS | Kit 3 → 2 in 1 turn; standard 3 → 1 in 2 turns; ISS 14/20 and 17/20 with NASA source; water unchanged |
+| Fit journey | 1366×768 and 1920×1080 fit at every step; 375×812 panel visible at every step except Water & Waste preview (7 px) |
+
+Audio checks confirm which effects started (the page's `__qsSfx` log); headless Chrome has no speakers, so **how they sound was not heard** — Ahmed's phone check below.
 
 ## UI pass (14 Nov) — fit, marker, icons, motion
 
