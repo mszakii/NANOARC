@@ -1701,3 +1701,161 @@
     text-underline-offset: 3px;
   }
 }
+
+/* =====================================================================
+   Tap marker v2: one input-aware cue + a short arrow anchored to the hotspot.
+   Touch: "Tap the Shelter". Mouse: "Click the Shelter". Keyboard focus: "Press Enter".
+   ===================================================================== */
+.scene {
+  .hot__cue {
+    top: auto;
+    left: 50%;
+    bottom: calc(100% + 30px);
+    translate: -50% 0;
+    gap: 0;
+    padding: 0.28em 0.75em;
+    border: 2px solid var(--sun);
+    background: var(--ink);
+    color: var(--card);
+    font-size: clamp(11px, 1.6cqi, 17px);
+    animation: none;
+    box-shadow: 0 3px 0 rgb(11 23 48 / 0.35);
+
+    &::after {
+      content: none;
+    }
+
+    &[data-align='start'] { translate: -18% 0; }
+    &[data-align='end'] { translate: -82% 0; }
+  }
+
+  .hot__arrow {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 2px);
+    display: none;
+    width: clamp(18px, 2.6cqi, 28px);
+    translate: -50% 0;
+    pointer-events: none;
+    animation: sc-point 1.1s ease-in-out infinite;
+
+    & svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    & path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    & .arrow-edge {
+      stroke: var(--ink);
+      stroke-width: 8;
+    }
+
+    & .arrow-core {
+      stroke: var(--sun);
+      stroke-width: 4;
+    }
+  }
+
+  &[data-open='0'] .hot.is-active .hot__arrow {
+    display: block;
+  }
+
+  /* The antenna sits at the top edge: cue and arrow point at it from the right. */
+  .hot[data-device='antenna'] {
+    .hot__cue {
+      top: 50%;
+      bottom: auto;
+      left: calc(100% + 34px);
+      translate: 0 -50%;
+    }
+
+    .hot__arrow {
+      top: 50%;
+      bottom: auto;
+      left: calc(100% + 4px);
+      rotate: 90deg;
+      translate: 0 -50%;
+      animation-name: sc-point-side;
+    }
+  }
+
+  /* Input-appropriate wording. Default (touch / unknown): Tap. Fine pointer with hover: Click. */
+  .cue-mouse,
+  .cue-key {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cue-touch { display: none; }
+    .cue-mouse { display: inline; }
+  }
+
+  .hot:focus-visible .hot__cue {
+    .cue-touch,
+    .cue-mouse { display: none; }
+
+    .cue-key { display: inline; }
+  }
+}
+
+@keyframes sc-point {
+  50% {
+    translate: -50% -5px;
+  }
+}
+
+@keyframes sc-point-side {
+  50% {
+    translate: 5px -50%;
+  }
+}
+
+/* Small scenes (phones): the arrow, ring and ink label mark the device; the "Tap the …" line sits in
+   the tray right above the main button, so no text bubble crowds a 270 px scene. Finished devices
+   keep a compact check, and the storm alert moves up into the sky, clear of every marker. */
+@container (max-width: 520px) {
+  .scene {
+    .hot__cue {
+      display: none !important;
+    }
+
+    .hot.is-done:not(.is-active) .hot__chip {
+      padding: 1px;
+      font-size: 0;
+      gap: 0;
+    }
+
+    .hot.is-done:not(.is-active) .hot__done {
+      width: 12px;
+      height: 12px;
+    }
+
+    .scene__note--alert {
+      left: 52%;
+      top: 5%;
+    }
+  }
+}
+
+.scene {
+  /* The bag steps come after the shelter choice is confirmed, so the panel is already open:
+     the bag and its spot still get the arrow (and the bubble on large scenes). */
+  &[data-active='bag'] .hot.is-active,
+  &[data-active='bag-spot'] .hot.is-active {
+    .hot__arrow { display: block; }
+    .hot__cue { display: inline-flex; }
+  }
+}
+
+/* The storm alert lives in the sky (where the particles come from), clear of every device marker. */
+.scene .scene__note.scene__note--alert {
+  left: 52%;
+  top: 5%;
+}

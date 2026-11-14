@@ -947,3 +947,13 @@
     padding: 6px 10px;
   }
 }
+
+/* Input-appropriate wording outside the scene (tray hint): Tap on touch, Click with a mouse. */
+.cue-mouse {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .slot-hint .cue-touch { display: none; }
+  .slot-hint .cue-mouse { display: inline; }
+}

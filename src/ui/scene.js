@@ -28,17 +28,22 @@ const ROOM_FOR_DEVICE = {
 };
 
 // Hotspot boxes in SVG units (viewBox 1200 x 900): [x, y, width, height].
+// cue: name used in "Tap the …"; align: where the cue bubble sits over its arrow so it stays inside
+// the scene and clear of nearby notes ('start' = extends right, 'end' = extends left, 'side' = to the right).
 const HOTSPOTS = [
-  { id: 'antenna', label: 'Antenna', box: [318, 40, 164, 152] },
-  { id: 'greenhouse', label: 'Greenhouse', box: [140, 222, 270, 240] },
-  { id: 'bag', label: 'Supply bag', box: [584, 226, 160, 150] },
-  { id: 'bag-spot', label: 'Bag spot', box: [790, 314, 148, 150] },
-  { id: 'shelter', label: 'Shelter', box: [940, 240, 140, 224] },
-  { id: 'valve', label: 'Heat valve', box: [142, 566, 128, 136] },
-  { id: 'oxygen', label: 'Oxygen', box: [474, 540, 148, 226] },
-  { id: 'recycler', label: 'Recycler', box: [780, 590, 150, 176] },
-  { id: 'printer', label: '3D printer', box: [934, 590, 148, 176] },
+  { id: 'antenna', label: 'Antenna', cue: 'Antenna', align: 'side', box: [318, 40, 164, 152] },
+  { id: 'greenhouse', label: 'Greenhouse', cue: 'Greenhouse', align: 'end', box: [140, 222, 270, 240] },
+  { id: 'bag', label: 'Supply bag', cue: 'Supply Bag', align: 'center', box: [584, 226, 160, 150] },
+  { id: 'bag-spot', label: 'Bag spot', cue: 'Bag Spot', align: 'start', box: [790, 314, 148, 150] },
+  { id: 'shelter', label: 'Shelter', cue: 'Shelter', align: 'end', box: [940, 240, 140, 224] },
+  { id: 'valve', label: 'Heat valve', cue: 'Heat Valve', align: 'start', box: [142, 566, 128, 136] },
+  { id: 'oxygen', label: 'Oxygen', cue: 'Oxygen Generator', align: 'center', box: [474, 540, 148, 226] },
+  { id: 'recycler', label: 'Recycler', cue: 'Recycler', align: 'center', box: [780, 590, 150, 176] },
+  { id: 'printer', label: '3D printer', cue: '3D Printer', align: 'end', box: [934, 590, 148, 176] },
 ];
+
+const CUE_ARROW =
+  '<svg viewBox="0 0 24 28" aria-hidden="true" focusable="false"><path class="arrow-edge" d="M12 3v17M5 13l7 8 7-8"/><path class="arrow-core" d="M12 3v17M5 13l7 8 7-8"/></svg>';
 
 // Free-play toys: they only bounce and never reach the game.
 const TOYS = [
@@ -66,9 +71,6 @@ const STARS = [
   [1160, 40, 2], [1178, 190, 3], [1150, 300, 2], [1172, 430, 2], [1140, 560, 3], [1176, 680, 2],
   [240, 150, 2], [600, 150, 2], [46, 700, 2], [1130, 730, 2], [490, 70, 2], [1080, 150, 2],
 ];
-
-const TAP_ICON =
-  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v12M6 10l6 6 6-6" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 21h14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>';
 
 function room(name, x, y, w, h) {
   const f = y + h - 24; // floor band top
@@ -397,7 +399,8 @@ function hotspotMarkup() {
     (h) => `
     <button type="button" class="hot" data-device="${h.id}" tabindex="-1" aria-label="${h.label}" style="${percentBox(h.box)}">
       <span class="hot__ring" aria-hidden="true"></span>
-      <span class="hot__cue" aria-hidden="true">${TAP_ICON}Tap</span>
+      <span class="hot__cue" data-align="${h.align}" aria-hidden="true"><span class="cue-touch">Tap the ${h.cue}</span><span class="cue-mouse">Click the ${h.cue}</span><span class="cue-key">Press Enter</span></span>
+      <span class="hot__arrow" aria-hidden="true">${CUE_ARROW}</span>
       <span class="hot__chip" aria-hidden="true"><svg class="hot__done" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${h.label}</span>
     </button>`,
   ).join('');
@@ -439,7 +442,8 @@ const pctY = (y) => `${Math.round((y / 900) * 10000) / 100}%`;
 /** Speaker beside the active device, partner waiting in another room; together on the roof at sunrise. */
 function crewSpots(state, v, active, room) {
   if (!state || (v.screen !== 'play' && v.screen !== 'end')) return { girl: [709, 452], boy: [771, 452] };
-  if (room === 'roof') return { girl: [572, 182], boy: [636, 182] };
+  // Roof: left of the antenna, clear of its cue (to the right) and of the solar panels.
+  if (room === 'roof') return { girl: [236, 182], boy: [292, 182] };
   const device = active ?? DEVICE_FOR_STEP[state.step];
   const lead = room === 'water' ? WATER_SPOT_FOR[device] ?? LEAD_SPOT.water : LEAD_SPOT[room] ?? PARTNER_SPOT;
   const partner = room === 'quarters' ? PARTNER_ALT_SPOT : PARTNER_SPOT;

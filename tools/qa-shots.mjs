@@ -147,6 +147,7 @@ const TOUR = [
 ];
 async function tour(run) {
   await send('Emulation.setDeviceMetricsOverride', { width: run.w, height: run.h, deviceScaleFactor: 1, mobile: run.mobile });
+  await send('Emulation.setTouchEmulationEnabled', { enabled: run.mobile, maxTouchPoints: run.mobile ? 5 : 1 });
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: run.reduce ? 'reduce' : 'no-preference' }] });
   await send('Page.navigate', { url: base });
   await sleep(1200);
@@ -457,6 +458,69 @@ if (process.env.MENU) {
     await send('Page.enable');
     await send('Runtime.enable');
     await menuRun();
+  } finally {
+    ws.close();
+    chrome.kill();
+  }
+  process.exit(0);
+}
+
+// Shelter target: hotspot vs tray shortcut open the same choices (mouse, touch, keyboard); cue wording per input.
+async function toShelter() {
+  await evaluate(`${HELPERS}
+    await c('[data-action="start"]'); await c('[data-action="launch"]');
+    for (const id of ['save_power', 'adjust']) {
+      await c('[data-action="open"]'); await c('[data-action="select"][data-id="' + id + '"]');
+      await c('[data-action="confirm"]'); await c('[data-action="continue"]');
+    }
+    true;`);
+  await sleep(500);
+}
+const choices = () => evaluate(`[...document.querySelectorAll('[data-action="select"]')].map((b) => b.dataset.id).join(',')`);
+const cueText = () => evaluate(`(() => { const h = document.querySelector('.hot.is-active'); const spans = [...h.querySelectorAll('.hot__cue > span')].filter((s) => getComputedStyle(s).display !== 'none' && getComputedStyle(h.querySelector('.hot__cue')).display !== 'none'); const hint = [...document.querySelectorAll('#tap-hint > span')].filter((s) => getComputedStyle(s).display !== 'none'); return { device: h.dataset.device, bubble: spans.map((s) => s.textContent).join(' ') || '(none)', arrow: getComputedStyle(h.querySelector('.hot__arrow')).display, tray: hint.map((s) => s.textContent).join(' ') }; })()`);
+
+async function shelterRun() {
+  const out = [];
+  for (const [mode, w, h, touch] of [['mouse', 1366, 768, false], ['touch', 375, 664, true]]) {
+    for (const via of ['hotspot', 'shortcut']) {
+      await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: touch });
+      await send('Emulation.setTouchEmulationEnabled', { enabled: touch, maxTouchPoints: touch ? 5 : 1 });
+      await send('Page.navigate', { url: base });
+      await sleep(1200);
+      await toShelter();
+      const cue = await cueText();
+      if (via === 'hotspot') {
+        if (touch) await tap('.hot[data-device="shelter"]');
+        else await clickReal('.hot[data-device="shelter"]');
+      } else if (touch) await tap('[data-action="open"]');
+      else await clickReal('[data-action="open"]');
+      out.push(`${mode} ${w}x${h} via ${via}: cue ${JSON.stringify(cue)} -> choices [${await choices()}]`);
+      if (via === 'hotspot') await shotTo(`shelter-${mode}-${w}x${h}-opened`);
+    }
+  }
+  // Keyboard: Shift+Tab to the shelter hotspot, check the cue says Press Enter, then Enter.
+  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false });
+  await send('Emulation.setTouchEmulationEnabled', { enabled: false, maxTouchPoints: 1 });
+  await send('Page.navigate', { url: base });
+  await sleep(1200);
+  await toShelter();
+  await evaluate(`document.querySelector('[data-action="open"]').focus(); true`);
+  for (let i = 0; i < 10; i += 1) {
+    await key('Tab', true);
+    const id = await evaluate(`document.activeElement?.dataset?.device ?? ''`);
+    if (id === 'shelter') break;
+  }
+  const focused = await cueText();
+  await shotTo('shelter-keyboard-focus-1366x768');
+  await key('Enter');
+  out.push(`keyboard: focused ${focused.device}, cue ${JSON.stringify(focused.bubble)} -> Enter opened [${await choices()}]`);
+  console.log(out.join(String.fromCharCode(10)));
+}
+if (process.env.SHELTER) {
+  try {
+    await send('Page.enable');
+    await send('Runtime.enable');
+    await shelterRun();
   } finally {
     ws.close();
     chrome.kill();

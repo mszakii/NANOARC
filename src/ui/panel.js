@@ -74,7 +74,7 @@ function choosePhase(state, step, view, opts) {
     return {
       main: talk(step, step.mood, step.say(state), true),
       foot: foot(
-        hintSlot('tap-hint', UI.tapHint),
+        `<p class="slot slot-hint" id="tap-hint"><span class="cue-touch">${esc(UI.tapThe(step.target))}</span><span class="cue-mouse">${esc(UI.clickThe(step.target))}</span></p>`,
         `<button type="button" class="btn btn-primary btn-big" data-action="open" data-primary>${icon('tap')} ${esc(step.open)}</button>`,
       ),
     };

@@ -31,6 +31,8 @@ export const UI = {
   launch: 'Launch Mission',
 
   tapHint: 'You can also tap the marked device in the base.',
+  tapThe: (name) => `Or tap the ${name} in the base.`,
+  clickThe: (name) => `Or click the ${name} in the base.`,
   choicesLabel: 'Your choices',
   picked: 'Picked',
   locked: 'Not ready',
@@ -162,6 +164,7 @@ export const ITEM_ORDER = ['battery', 'kit', 'mealPack'];
  */
 export const STEPS = {
   greenhouse: {
+    target: 'Greenhouse',
     eyebrow: 'Crisis 1 of 4',
     crisis: 'Power & Food',
     open: 'Open the Greenhouse',
@@ -175,6 +178,7 @@ export const STEPS = {
     },
   },
   valve: {
+    target: 'Heat Valve',
     eyebrow: 'Crisis 2 of 4',
     crisis: 'Heat & Shelter',
     open: 'Open the Heat Control Valve',
@@ -188,6 +192,7 @@ export const STEPS = {
     },
   },
   shelter: {
+    target: 'Shelter',
     eyebrow: 'Crisis 2 of 4',
     crisis: 'Heat & Shelter',
     open: 'Go to the Shelter Corner',
@@ -201,6 +206,7 @@ export const STEPS = {
     },
   },
   oxygen: {
+    target: 'Oxygen Generator',
     eyebrow: 'Crisis 3 of 4',
     crisis: 'Oxygen',
     open: 'Open the Oxygen Generator',
@@ -214,6 +220,7 @@ export const STEPS = {
     },
   },
   repair: {
+    target: 'Recycler',
     eyebrow: 'Crisis 4 of 4',
     crisis: 'Water & Waste',
     open: 'Open the Water Recycler',
@@ -230,6 +237,7 @@ export const STEPS = {
     },
   },
   plastic: {
+    target: '3D Printer',
     eyebrow: 'Crisis 4 of 4',
     crisis: 'Water & Waste',
     open: 'Open the 3D Printer',
@@ -243,6 +251,7 @@ export const STEPS = {
     },
   },
   signal: {
+    target: 'Antenna',
     eyebrow: 'Sunrise',
     crisis: 'Sunrise & Signal',
     open: 'Open the Antenna',
@@ -256,6 +265,7 @@ export const STEPS = {
     },
   },
   antenna: {
+    target: 'Antenna',
     eyebrow: 'Sunrise',
     crisis: 'Sunrise & Signal',
     open: 'Open the Antenna',
